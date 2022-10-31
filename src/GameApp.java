@@ -123,22 +123,22 @@ class Helicopter extends GameObject{
 
     }
     public void accelerate(){
-        if(speed <= 3){
+        if(speed < 3){
             speed += .5;
         }
     }
     public void decelerate(){
-        if(speed >= -3){
+        if(speed > -3){
             speed -= .5;
         }
     }
     public void clockwiseTurn(){
-
+        this.setRotate(getRotate() + 2);
     }
     public void counterClockwiseTurn(){
-
+        this.setRotate(getRotate() - 2);
     }
-    public double getVelocityX(double speed){
+    public double getVelocityX(){
         velocityX = speed * cos(Math.toDegrees(getRotate()));
         return velocityX;
     }
@@ -147,8 +147,9 @@ class Helicopter extends GameObject{
         return velocityY;
     }
 
-    public void update(double velocityX, double velocityY, double rotate){
-
+    public void update(double velocityX, double velocityY){
+        this.setTranslateX(this.getTranslateX() + velocityX);
+        this.setTranslateY(this.getTranslateY() + velocityY);
     }
 
 }
@@ -202,6 +203,8 @@ class Game extends Pane{
             double frameTime = (currentFrame - oldFrame) / 1e9;
             oldFrame = currentFrame;
             elapsedTime += frameTime;
+
+            choppah.update(choppah.getVelocityX(), choppah.getVelocityY());
         }
     };
     public Game(){
@@ -229,10 +232,10 @@ public class GameApp extends Application {
                     rainmaker.choppah.decelerate();
                 }
                 if(event.getCode() == KeyCode.LEFT){
-
+                    rainmaker.choppah.counterClockwiseTurn();
                 }
                 if(event.getCode() == KeyCode.RIGHT){
-
+                    rainmaker.choppah.clockwiseTurn();
                 }
             }
 
