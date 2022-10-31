@@ -103,7 +103,7 @@ class Pond{
 }
 
 
-class Game extends Group{
+class Game extends Pane{
     private final static double APP_WIDTH = 900;
     private final static double APP_HEIGHT = 1000;
     Helicopter choppah = new Helicopter();
@@ -120,7 +120,7 @@ class Game extends Group{
             elapsedTime += frameTime;
         }
     };
-    public Rainmaker(){
+    public Game(){
         this.getChildren().addAll(choppah);
     }
 }
