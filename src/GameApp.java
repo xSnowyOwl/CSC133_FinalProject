@@ -99,6 +99,9 @@ class Helicopter extends GameObject{
     public double getSpeed(){
         return speed;
     }
+    public void setSpeed(double speed){
+        this.speed = speed;
+    }
     public double getVelocityX(){
         return velocityX;
     }
@@ -182,10 +185,14 @@ public class GameApp extends Application {
             @Override
             public void handle(KeyEvent event) {
                 if(event.getCode() == KeyCode.UP){
-                    //rainmaker.choppah.getSpeed() += 1;
+                    rainmaker.choppah.setSpeed(
+                            rainmaker.choppah.getSpeed() + 1
+                    );
                 }
                 if(event.getCode() == KeyCode.DOWN){
-
+                    rainmaker.choppah.setSpeed(
+                            rainmaker.choppah.getSpeed() - 1
+                    );
                 }
                 if(event.getCode() == KeyCode.LEFT){
 
