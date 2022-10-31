@@ -67,6 +67,29 @@ abstract class GameObject extends Group implements Updatable{
     }
 }
 
+class HelicopterBody extends GameObject{
+    private static final double chopperBodyWidth = 30;
+    private static final double chopperBodyHeight = 50;
+    public HelicopterBody(){
+        super();
+        Rectangle chopperBody = new Rectangle();
+        chopperBody.setWidth(chopperBodyWidth);
+        chopperBody.setHeight(chopperBodyHeight);
+        chopperBody.setFill(Color.LEMONCHIFFON);
+    }
+}
+
+class HelicopterTail extends GameObject{
+    private static final double chopperTailWidth = 10;
+    private static final double chopperTailHeight = 60;
+    public HelicopterTail(){
+        Rectangle chopperTail = new Rectangle();
+        chopperTail.setWidth(chopperTailWidth);
+        chopperTail.setHeight(chopperTailHeight);
+        chopperTail.setFill(Color.LEMONCHIFFON);
+    }
+}
+
 class Helicopter extends GameObject{
     private static final double chopperBodyWidth = 30;
     private static final double chopperBodyHeight = 50;
@@ -99,13 +122,21 @@ class Helicopter extends GameObject{
         add(chopperTail);
 
     }
-    public double accelerate(){
-        speed += .5;
-        return speed;
+    public void accelerate(){
+        if(speed <= 3){
+            speed += .5;
+        }
     }
-    public double decelerate(){
-        speed -= .5;
-        return speed;
+    public void decelerate(){
+        if(speed >= -3){
+            speed -= .5;
+        }
+    }
+    public void clockwiseTurn(){
+
+    }
+    public void counterClockwiseTurn(){
+
     }
     public double getVelocityX(double speed){
         velocityX = speed * cos(Math.toDegrees(getRotate()));
