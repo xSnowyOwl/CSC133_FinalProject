@@ -1,8 +1,11 @@
 import javafx.animation.AnimationTimer;
 import javafx.application.Application;
+import javafx.event.EventHandler;
 import javafx.scene.Group;
 import javafx.scene.Node;
 import javafx.scene.Scene;
+import javafx.scene.input.KeyCode;
+import javafx.scene.input.KeyEvent;
 import javafx.scene.layout.Pane;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.Ellipse;
@@ -66,6 +69,9 @@ class Helicopter extends GameObject{
     private static final double chopperBodyHeight = 50;
     private static final double chopperTailWidth = 10;
     private static final double chopperTailHeight = 60;
+    private double speed = 0;
+    private double velocityX = 0;
+    private double velocityY = 0;
 
     public Helicopter(){
         super();
@@ -88,28 +94,40 @@ class Helicopter extends GameObject{
 
         add(chopperBody);
         add(chopperTail);
+
     }
+    public double getSpeed(){
+        return speed;
+    }
+    public double getVelocityX(){
+        return velocityX;
+    }
+    public double getVelocityY(){
+        return velocityY;
+    }
+
+    public void update(double velocityX, double velocityY, double rotate){
+
+    }
+
 }
 
 class Helipad extends Pane{
     private static final int helipadWidth = 200;
+    private static final int helipadHeight = 200;
     private static final int helipadRadius = 80;
     private static final int helipadStartX = 350;
     private static final int helipadStartY = 775;
     public Helipad(){
-        Rectangle helipadRect = new Rectangle();
-        helipadRect.setWidth(helipadWidth);
-        helipadRect.setHeight(helipadWidth);
+        Rectangle helipadRect = new Rectangle(helipadWidth, helipadHeight);
         helipadRect.setOpacity(100);
-        helipadRect.setStroke(Color.WHITE);
+        helipadRect.setStroke(Color.GRAY);
         helipadRect.setTranslateX(helipadStartX);
         helipadRect.setTranslateY(helipadStartY);
 
-        Ellipse helipadCircle = new Ellipse();
-        helipadCircle.setRadiusX(helipadRadius);
-        helipadCircle.setRadiusY(helipadRadius);
+        Ellipse helipadCircle = new Ellipse(helipadRadius, helipadRadius);
         helipadCircle.setOpacity(100);
-        helipadCircle.setStroke(Color.WHITE);
+        helipadCircle.setStroke(Color.GRAY);
         helipadCircle.setTranslateX(helipadRect.getTranslateX() + 100);
         helipadCircle.setTranslateY(helipadRect.getTranslateY()
                                     + helipadRadius + 20);
@@ -160,6 +178,26 @@ public class GameApp extends Application {
         Scene scene = new Scene(root, rainmakerApp.getX(),
                                 rainmakerApp.getY(), Color.BLACK);
         root.getChildren().add(rainmaker);
+        scene.setOnKeyPressed(new EventHandler<KeyEvent>() {
+            @Override
+            public void handle(KeyEvent event) {
+                if(event.getCode() == KeyCode.UP){
+                    //rainmaker.choppah.getSpeed() += 1;
+                }
+                if(event.getCode() == KeyCode.DOWN){
+
+                }
+                if(event.getCode() == KeyCode.LEFT){
+
+                }
+                if(event.getCode() == KeyCode.RIGHT){
+
+                }
+            }
+
+        });
+
+        rainmaker.game.start();
         primaryStage.setScene(scene);
         primaryStage.setResizable(false);
         primaryStage.setTitle("Rainmaker");
