@@ -60,13 +60,13 @@ abstract class GameObject extends Group implements Updatable{
     }
 }
 
-class Chopper extends GameObject{
+class Helicopter extends GameObject{
     private static double chopperBodyWidth = 30;
     private static double chopperBodyHeight = 50;
     private static double chopperTailWidth = 10;
     private static double chopperTailHeight = 60;
 
-    public Chopper(){
+    public Helicopter(){
         super();
 
         Rectangle chopperBody = new Rectangle();
@@ -90,10 +90,23 @@ class Chopper extends GameObject{
     }
 }
 
-class Rainmaker extends Group{
+class Helipad{
+
+}
+
+class Cloud{
+
+}
+
+class Pond{
+
+}
+
+
+class Game extends Group{
     private final static double APP_WIDTH = 900;
     private final static double APP_HEIGHT = 1000;
-    Chopper chopper = new Chopper();
+    Helicopter choppah = new Helicopter();
 
     AnimationTimer game = new AnimationTimer() {
         double oldFrame = -1;
@@ -108,15 +121,15 @@ class Rainmaker extends Group{
         }
     };
     public Rainmaker(){
-        this.getChildren().addAll(chopper);
+        this.getChildren().addAll(choppah);
     }
 }
 
 
-public class RainmakerApp extends Application {
+public class GameApp extends Application {
     Pane root = new Pane();
     Point2D rainmakerApp = new Point2D(900, 1000);
-    Rainmaker rainmaker = new Rainmaker();
+    Game rainmaker = new Game();
     @Override
     public void start(Stage primaryStage) throws Exception {
         Scene scene = new Scene(root, rainmakerApp.getX(),
