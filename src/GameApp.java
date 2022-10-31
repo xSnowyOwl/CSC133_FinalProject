@@ -99,11 +99,13 @@ class Helicopter extends GameObject{
         add(chopperTail);
 
     }
-    public double getSpeed(){
+    public double accelerate(){
+        speed += .5;
         return speed;
     }
-    public void setSpeed(double speed){
-        this.speed = speed;
+    public double decelerate(){
+        speed -= .5;
+        return speed;
     }
     public double getVelocityX(double speed){
         velocityX = speed * cos(Math.toDegrees(getRotate()));
@@ -189,15 +191,11 @@ public class GameApp extends Application {
         scene.setOnKeyPressed(new EventHandler<KeyEvent>() {
             @Override
             public void handle(KeyEvent event) {
-                if(event.getCode() == KeyCode.UP){
-                    rainmaker.choppah.setSpeed(
-                            rainmaker.choppah.getSpeed() + 1
-                    );
+                if(event.getCode() == KeyCode.UP) {
+                    rainmaker.choppah.accelerate();
                 }
                 if(event.getCode() == KeyCode.DOWN){
-                    rainmaker.choppah.setSpeed(
-                            rainmaker.choppah.getSpeed() - 1
-                    );
+                    rainmaker.choppah.decelerate();
                 }
                 if(event.getCode() == KeyCode.LEFT){
 
