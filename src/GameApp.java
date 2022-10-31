@@ -16,6 +16,9 @@ import javafx.stage.Stage;
 import javafx.scene.shape.Rectangle;
 import javafx.geometry.Point2D;
 
+import static java.lang.Math.cos;
+import static java.lang.Math.sin;
+
 interface Updatable{
     void update();
 }
@@ -102,10 +105,12 @@ class Helicopter extends GameObject{
     public void setSpeed(double speed){
         this.speed = speed;
     }
-    public double getVelocityX(){
+    public double getVelocityX(double speed){
+        velocityX = speed * cos(Math.toDegrees(getRotate()));
         return velocityX;
     }
     public double getVelocityY(){
+        velocityY = speed * sin(Math.toDegrees(getRotate()));
         return velocityY;
     }
 
