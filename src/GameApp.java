@@ -117,33 +117,45 @@ class Helicopter extends GameObject{
                                         + 10);
         chopperTail.setTranslateY(chopperBody.getTranslateY()
                                         + chopperBodyHeight);
-
+        this.setRotate(0);
         add(chopperBody);
         add(chopperTail);
 
     }
     public void accelerate(){
         if(speed < 3){
-            speed += .5;
+            speed += .2;
         }
+        System.out.println(getRotate());
+        System.out.println(velocityX);
+        System.out.println(velocityY);
     }
     public void decelerate(){
         if(speed > -3){
-            speed -= .5;
+            speed -= .2;
         }
+        System.out.println(getRotate());
+        System.out.println(velocityX);
+        System.out.println(velocityY);
     }
     public void clockwiseTurn(){
-        this.setRotate(getRotate() + 2);
+        this.setRotate((getRotate() + 3));
+/*        System.out.println(90 - getRotate());
+        System.out.println(velocityX);
+        System.out.println(velocityY);*/
     }
     public void counterClockwiseTurn(){
-        this.setRotate(getRotate() - 2);
+        this.setRotate((getRotate() - 3));
+/*        System.out.println(90 - getRotate());
+        System.out.println(velocityX);
+        System.out.println(velocityY);*/
     }
     public double getVelocityX(){
-        velocityX = speed * cos(Math.toDegrees(getRotate()));
+        velocityX = speed * cos(Math.toRadians(90 - getRotate()));
         return velocityX;
     }
     public double getVelocityY(){
-        velocityY = speed * sin(Math.toDegrees(getRotate()));
+        velocityY = speed * sin(Math.toRadians((90 - getRotate()) * -1));
         return velocityY;
     }
 
