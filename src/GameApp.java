@@ -24,9 +24,9 @@ interface Updatable{
 }
 
 abstract class GameObject extends Group implements Updatable{
-    private Translate myTranslation;
-    private Rotate myRotation;
-    private Scale myScale;
+    protected Translate myTranslation;
+    protected Rotate myRotation;
+    protected Scale myScale;
 
     public GameObject(){
         myTranslation = new Translate();
@@ -76,6 +76,7 @@ class HelicopterBody extends GameObject{
         chopperBody.setWidth(chopperBodyWidth);
         chopperBody.setHeight(chopperBodyHeight);
         chopperBody.setFill(Color.LEMONCHIFFON);
+        add(chopperBody);
     }
 }
 
@@ -86,82 +87,60 @@ class HelicopterTail extends GameObject{
         Rectangle chopperTail = new Rectangle();
         chopperTail.setWidth(chopperTailWidth);
         chopperTail.setHeight(chopperTailHeight);
-        chopperTail.setFill(Color.LEMONCHIFFON);
+        chopperTail.setFill(Color.BLUE);
+        add(chopperTail);
     }
 }
 
 class Helicopter extends GameObject{
-    private static final double chopperBodyWidth = 30;
-    private static final double chopperBodyHeight = 50;
-    private static final double chopperTailWidth = 10;
-    private static final double chopperTailHeight = 60;
     private double speed = 0;
     private double velocityX = 0;
     private double velocityY = 0;
 
     public Helicopter(){
-        super();
-
-        Rectangle chopperBody = new Rectangle();
-        chopperBody.setWidth(chopperBodyWidth);
-        chopperBody.setHeight(chopperBodyHeight);
-        chopperBody.setFill(Color.LEMONCHIFFON);
-        chopperBody.setTranslateX(438);
-        chopperBody.setTranslateY(850);
-
-        Rectangle chopperTail = new Rectangle();
-        chopperTail.setWidth(chopperTailWidth);
-        chopperTail.setHeight(chopperTailHeight);
-        chopperTail.setFill(Color.LEMONCHIFFON);
-        chopperTail.setTranslateX(chopperBody.getTranslateX()
-                                        + 10);
-        chopperTail.setTranslateY(chopperBody.getTranslateY()
-                                        + chopperBodyHeight);
-        this.setRotate(0);
-        add(chopperBody);
-        add(chopperTail);
-
+        HelicopterBody body = new HelicopterBody();
+        add(makeTail(10, -60, 0));
+        add(body);
+    }
+    private HelicopterTail makeTail(double tx, double ty, int degrees){
+        HelicopterTail tail = new HelicopterTail();
+        tail.rotate(degrees);
+        tail.translate(tx, ty);
+        return tail;
     }
     public void accelerate(){
-        if(speed < 3){
+        if(speed < 2){
             speed += .2;
         }
-        System.out.println(getRotate());
-        System.out.println(velocityX);
-        System.out.println(velocityY);
     }
     public void decelerate(){
-        if(speed > -3){
+        if(speed > -2){
             speed -= .2;
         }
-        System.out.println(getRotate());
-        System.out.println(velocityX);
-        System.out.println(velocityY);
+    }
+    public void setPivot(){
+        this.myRotation.setPivotX(this.myTranslation.getX() + 15);
+        this.myRotation.setPivotY(this.myTranslation.getY() + 25);
     }
     public void clockwiseTurn(){
-        this.setRotate((getRotate() + 3));
-/*        System.out.println(90 - getRotate());
-        System.out.println(velocityX);
-        System.out.println(velocityY);*/
+        this.rotate(this.getMyRotation() - 3);
     }
     public void counterClockwiseTurn(){
-        this.setRotate((getRotate() - 3));
-/*        System.out.println(90 - getRotate());
-        System.out.println(velocityX);
-        System.out.println(velocityY);*/
+        this.rotate(this.getMyRotation() + 3);
     }
     public double getVelocityX(){
-        velocityX = speed * cos(Math.toRadians(90 - getRotate()));
+        velocityX = speed * cos(Math.toRadians(90 + getMyRotation()));
         return velocityX;
     }
     public double getVelocityY(){
-        velocityY = speed * sin(Math.toRadians((90 - getRotate()) * -1));
+        velocityY = speed * sin(Math.toRadians(90 - getMyRotation()));
         return velocityY;
     }
 
     public void update(double velocityX, double velocityY){
         this.setTranslateX(this.getTranslateX() + velocityX);
         this.setTranslateY(this.getTranslateY() + velocityY);
+        this.setPivot();
     }
 
 }
@@ -170,8 +149,8 @@ class Helipad extends Pane{
     private static final int helipadWidth = 200;
     private static final int helipadHeight = 200;
     private static final int helipadRadius = 80;
-    private static final int helipadStartX = 350;
-    private static final int helipadStartY = 775;
+    private static final int helipadStartX = -85;
+    private static final int helipadStartY = -90;
     public Helipad(){
         Rectangle helipadRect = new Rectangle(helipadWidth, helipadHeight);
         helipadRect.setOpacity(100);
@@ -253,6 +232,9 @@ public class GameApp extends Application {
 
         });
 
+        root.setScaleY(-1);
+        root.setTranslateX(438);
+        root.setTranslateY(-100);
         rainmaker.game.start();
         primaryStage.setScene(scene);
         primaryStage.setResizable(false);
@@ -263,6 +245,5 @@ public class GameApp extends Application {
     public static void main(String[] args){
         Application.launch(args);
     }
-
 
 }
