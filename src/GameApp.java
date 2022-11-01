@@ -87,8 +87,19 @@ class HelicopterTail extends GameObject{
         Rectangle chopperTail = new Rectangle();
         chopperTail.setWidth(chopperTailWidth);
         chopperTail.setHeight(chopperTailHeight);
-        chopperTail.setFill(Color.BLUE);
+        chopperTail.setFill(Color.LEMONCHIFFON);
         add(chopperTail);
+    }
+}
+
+class HelicopterBlade extends GameObject{
+    private static final double chopperBladeWidth = 2;
+    private static final double chopperBladeLength = 60;
+    public HelicopterBlade(){
+        Rectangle chopperBlade = new Rectangle(chopperBladeWidth,
+                                                chopperBladeLength);
+        chopperBlade.setFill(Color.BLACK);
+        add(chopperBlade);
     }
 }
 
@@ -99,14 +110,31 @@ class Helicopter extends GameObject{
 
     public Helicopter(){
         HelicopterBody body = new HelicopterBody();
-        add(makeTail(10, -60, 0));
+        add(makeTail(10, -59, 0));
         add(body);
+
+        add(makeBlade(14, 25, 1, 0));
+        add(makeBlade(14, 25, 1, 90));
+        add(makeBlade(14, 25, 1, 180));
+        add(makeBlade(14, 25, 1, 270));
+
+        add(makeBlade(14, -60, .25, 0));
+        add(makeBlade(14, -60, .25, 120));
+        add(makeBlade(14, -60, .25, 240));
     }
     private HelicopterTail makeTail(double tx, double ty, int degrees){
         HelicopterTail tail = new HelicopterTail();
         tail.rotate(degrees);
         tail.translate(tx, ty);
         return tail;
+    }
+    private HelicopterBlade makeBlade(double tx, double ty, double sy,
+                                      int degrees){
+        HelicopterBlade blade = new HelicopterBlade();
+        blade.rotate(degrees);
+        blade.scale(1, sy);
+        blade.translate(tx, ty);
+        return blade;
     }
     public void accelerate(){
         if(speed < 2){
@@ -153,14 +181,16 @@ class Helipad extends Pane{
     private static final int helipadStartY = -90;
     public Helipad(){
         Rectangle helipadRect = new Rectangle(helipadWidth, helipadHeight);
-        helipadRect.setOpacity(100);
-        helipadRect.setStroke(Color.GRAY);
+        helipadRect.setFill(Color.SANDYBROWN);
+        helipadRect.setStroke(Color.BLACK);
+        helipadRect.setStrokeWidth(2);
         helipadRect.setTranslateX(helipadStartX);
         helipadRect.setTranslateY(helipadStartY);
 
         Ellipse helipadCircle = new Ellipse(helipadRadius, helipadRadius);
-        helipadCircle.setOpacity(100);
-        helipadCircle.setStroke(Color.GRAY);
+        helipadCircle.setFill(Color.SADDLEBROWN);
+        helipadCircle.setStroke(Color.WHITE);
+        helipadCircle.setStrokeWidth(2);
         helipadCircle.setTranslateX(helipadRect.getTranslateX() + 100);
         helipadCircle.setTranslateY(helipadRect.getTranslateY()
                                     + helipadRadius + 20);
@@ -211,7 +241,7 @@ public class GameApp extends Application {
     @Override
     public void start(Stage primaryStage) throws Exception {
         Scene scene = new Scene(root, rainmakerApp.getX(),
-                                rainmakerApp.getY(), Color.BLACK);
+                                rainmakerApp.getY(), Color.SANDYBROWN);
         root.getChildren().add(rainmaker);
         scene.setOnKeyPressed(new EventHandler<KeyEvent>() {
             @Override
