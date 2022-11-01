@@ -103,7 +103,64 @@ class HelicopterBlade extends GameObject{
     }
 }
 
+class HelicopterPropeller extends GameObject{
+    public HelicopterBlade makeBlade(double tx, double ty, double sy,
+                                     int degrees){
+        HelicopterBlade blade = new HelicopterBlade();
+        blade.rotate(degrees);
+        blade.scale(1, sy);
+        blade.translate(tx, ty);
+        return blade;
+    }
+    public void update(){
+        this.rotate(this.getMyRotation() + 3);
+    }
+}
+
+class BigPropeller extends HelicopterPropeller{
+    public BigPropeller(){
+        Ellipse spin = new Ellipse(60, 60);
+        spin.setFill(Color.BLACK);
+        spin.setOpacity(.25);
+        spin.setTranslateX(15);
+        spin.setTranslateY(25);
+        add(spin);
+        add(makeBlade(14, 25, 1, 45));
+        add(makeBlade(14, 25, 1, 135));
+        add(makeBlade(14, 25, 1, 225));
+        add(makeBlade(14, 25, 1, 315));
+    }
+
+    public void setPivot(){
+        this.myRotation.setPivotX(this.myTranslation.getX() + 15);
+        this.myRotation.setPivotY(this.myTranslation.getY() + 25);
+    }
+}
+
+class SmallPropeller extends HelicopterPropeller{
+    public SmallPropeller(){
+        Ellipse smallSpin = new Ellipse(15, 15);
+        smallSpin.setFill(Color.BLACK);
+        smallSpin.setOpacity(.25);
+        smallSpin.setTranslateX(15);
+        smallSpin.setTranslateY(-60);
+        add(smallSpin);
+        add(makeBlade(14, -60, .25, 0));
+        add(makeBlade(14, -60, .25, 120));
+        add(makeBlade(14, -60, .25, 240));
+    }
+    public void update(){
+        this.rotate(this.getMyRotation() + 5);
+    }
+    public void setPivot(){
+        this.myRotation.setPivotX(this.myTranslation.getX() + 15);
+        this.myRotation.setPivotY(this.myTranslation.getY() - 60);
+    }
+}
+
 class Helicopter extends GameObject{
+    BigPropeller bigPropeller = new BigPropeller();
+    SmallPropeller smallPropeller = new SmallPropeller();
     private double speed = 0;
     private double velocityX = 0;
     private double velocityY = 0;
@@ -112,15 +169,8 @@ class Helicopter extends GameObject{
         HelicopterBody body = new HelicopterBody();
         add(makeTail(10, -59, 0));
         add(body);
-
-        add(makeBlade(14, 25, 1, 0));
-        add(makeBlade(14, 25, 1, 90));
-        add(makeBlade(14, 25, 1, 180));
-        add(makeBlade(14, 25, 1, 270));
-
-        add(makeBlade(14, -60, .25, 0));
-        add(makeBlade(14, -60, .25, 120));
-        add(makeBlade(14, -60, .25, 240));
+        add(bigPropeller);
+        add(smallPropeller);
     }
     private HelicopterTail makeTail(double tx, double ty, int degrees){
         HelicopterTail tail = new HelicopterTail();
@@ -128,14 +178,7 @@ class Helicopter extends GameObject{
         tail.translate(tx, ty);
         return tail;
     }
-    private HelicopterBlade makeBlade(double tx, double ty, double sy,
-                                      int degrees){
-        HelicopterBlade blade = new HelicopterBlade();
-        blade.rotate(degrees);
-        blade.scale(1, sy);
-        blade.translate(tx, ty);
-        return blade;
-    }
+
     public void accelerate(){
         if(speed < 2){
             speed += .2;
@@ -169,8 +212,11 @@ class Helicopter extends GameObject{
         this.setTranslateX(this.getTranslateX() + velocityX);
         this.setTranslateY(this.getTranslateY() + velocityY);
         this.setPivot();
+        bigPropeller.update();
+        bigPropeller.setPivot();
+        smallPropeller.update();
+        smallPropeller.setPivot();
     }
-
 }
 
 class Helipad extends Pane{
