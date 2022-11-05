@@ -256,22 +256,32 @@ class Cloud extends Pane{
         Circle cloud = new Circle();
         cloud.setFill(Color.WHITE);
         cloud.setRadius(cloudRadius);
-        //cloud.setTranslateY(900 - cloudRadius);
-        //cloud.setTranslateX(-438 + cloudRadius);
         cloud.setTranslateY(
                 random.nextDouble((upperMap - lowerMap - 2 * cloudRadius))
                                                 + (lowerMap + cloudRadius));
         cloud.setTranslateX(
                 random.nextDouble((rightMap - cloudRadius))
                                                 + (leftMap + cloudRadius));
-        System.out.println("Cloud Y: " + cloud.getTranslateY());
-        System.out.println("Cloud X: " + cloud.getTranslateX());
         getChildren().add(cloud);
     }
 }
 
-class Pond{
-
+class Pond extends Pane{
+    Random random = new Random();
+    double pondRadius = 30;
+    public Pond(double upperMap, double lowerMap, double leftMap,
+                double rightMap){
+        Circle pond = new Circle();
+        pond.setFill(Color.BLUE);
+        pond.setRadius(pondRadius);
+        pond.setTranslateY(
+                random.nextDouble((upperMap - lowerMap - 2 * pondRadius))
+                                            + (lowerMap + pondRadius));
+        pond.setTranslateX(
+                random.nextDouble((rightMap - pondRadius))
+                                            + (leftMap + pondRadius));
+        getChildren().add(pond);
+    }
 }
 
 
@@ -281,6 +291,10 @@ class Game extends Pane{
     Helicopter choppah = new Helicopter();
     Helipad helipad = new Helipad();
     Cloud cloud = new Cloud((APP_HEIGHT - 100),
+            (helipad.getTranslateY() + 200),
+            -438,
+            APP_WIDTH);
+    Pond pond = new Pond((APP_HEIGHT - 100),
             (helipad.getTranslateY() + 200),
             -438,
             APP_WIDTH);
@@ -299,8 +313,9 @@ class Game extends Pane{
             choppah.update(choppah.getVelocityX(), choppah.getVelocityY());
         }
     };
+
     public Game(){
-        this.getChildren().addAll(helipad, choppah, cloud);
+        this.getChildren().addAll(helipad, choppah, cloud, pond);
     }
 }
 
