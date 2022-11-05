@@ -8,6 +8,7 @@ import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyEvent;
 import javafx.scene.layout.Pane;
 import javafx.scene.paint.Color;
+import javafx.scene.shape.Circle;
 import javafx.scene.shape.Ellipse;
 import javafx.scene.transform.Rotate;
 import javafx.scene.transform.Scale;
@@ -15,6 +16,8 @@ import javafx.scene.transform.Translate;
 import javafx.stage.Stage;
 import javafx.scene.shape.Rectangle;
 import javafx.geometry.Point2D;
+
+import java.util.Random;
 
 import static java.lang.Math.cos;
 import static java.lang.Math.sin;
@@ -150,7 +153,7 @@ class SmallPropeller extends HelicopterPropeller{
         add(makeBlade(14, -60, .25, 240));
     }
     public void update(){
-        this.rotate(this.getMyRotation() + 5);
+        this.rotate(this.getMyRotation() - 5);
     }
     public void setPivot(){
         this.myRotation.setPivotX(this.myTranslation.getX() + 15);
@@ -245,8 +248,26 @@ class Helipad extends Pane{
     }
 }
 
-class Cloud{
-
+class Cloud extends Pane{
+    Random random = new Random();
+    double cloudRadius = 50;
+    public Cloud(double upperMap, double lowerMap, double leftMap,
+                 double rightMap){
+        Circle cloud = new Circle();
+        cloud.setFill(Color.WHITE);
+        cloud.setRadius(cloudRadius);
+        //cloud.setTranslateY(900 - cloudRadius);
+        //cloud.setTranslateX(-438 + cloudRadius);
+        cloud.setTranslateY(
+                random.nextDouble((upperMap - lowerMap - 2 * cloudRadius))
+                                                + (lowerMap + cloudRadius));
+        cloud.setTranslateX(
+                random.nextDouble((rightMap - cloudRadius))
+                                                + (leftMap + cloudRadius));
+        System.out.println("Cloud Y: " + cloud.getTranslateY());
+        System.out.println("Cloud X: " + cloud.getTranslateX());
+        getChildren().add(cloud);
+    }
 }
 
 class Pond{
@@ -259,6 +280,10 @@ class Game extends Pane{
     private final static double APP_HEIGHT = 1000;
     Helicopter choppah = new Helicopter();
     Helipad helipad = new Helipad();
+    Cloud cloud = new Cloud((APP_HEIGHT - 100),
+            (helipad.getTranslateY() + 200),
+            -438,
+            APP_WIDTH);
 
     AnimationTimer game = new AnimationTimer() {
         double oldFrame = -1;
@@ -275,7 +300,7 @@ class Game extends Pane{
         }
     };
     public Game(){
-        this.getChildren().addAll(helipad, choppah);
+        this.getChildren().addAll(helipad, choppah, cloud);
     }
 }
 
