@@ -10,6 +10,7 @@ import javafx.scene.layout.Pane;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.Circle;
 import javafx.scene.shape.Ellipse;
+import javafx.scene.text.Font;
 import javafx.scene.text.Text;
 import javafx.scene.transform.Rotate;
 import javafx.scene.transform.Scale;
@@ -87,11 +88,13 @@ class HelicopterBody extends GameObject{
 class HelicopterTail extends GameObject{
     private static final double chopperTailWidth = 10;
     private static final double chopperTailHeight = 60;
-    public HelicopterTail(){
+    public HelicopterTail(double tx, double ty, int degrees){
         Rectangle chopperTail = new Rectangle();
         chopperTail.setWidth(chopperTailWidth);
         chopperTail.setHeight(chopperTailHeight);
         chopperTail.setFill(Color.LEMONCHIFFON);
+        rotate(degrees);
+        translate(tx, ty);
         add(chopperTail);
     }
 }
@@ -165,32 +168,27 @@ class Helicopter extends GameObject{
     //BigPropeller bigPropeller = new BigPropeller();
     //SmallPropeller smallPropeller = new SmallPropeller();
     private double accelerationLevel = 0;
-    private double speed = 0;
+    private double speed;
     private double velocityX = 0;
     private double velocityY = 0;
     private boolean ignition = false;
-
-
+    private int chopperFuel = 25000;
+    GameText heliText = new GameText(-12, -60, Color.LEMONCHIFFON);
 
     public Helicopter(){
-        GameText heliText = new GameText(0, -60, Color.BLACK);
-        HelicopterBody body = new HelicopterBody();
-        add(makeTail(10, -59, 0));
-        add(body);
+        heliText.setText("F: " + chopperFuel);
+        speed = 0;
+
+        add(new HelicopterBody());
+        add(new HelicopterTail(10, -59, 0));
         add(heliText);
         //add(bigPropeller);
         //add(smallPropeller);
     }
-    private HelicopterTail makeTail(double tx, double ty, int degrees){
-        HelicopterTail tail = new HelicopterTail();
-        tail.rotate(degrees);
-        tail.translate(tx, ty);
-        return tail;
-    }
 
     public void accelerate(){
         if(ignition){
-            if(speed < 2){
+            if(speed < 10){
                 accelerationLevel++;
                 speed = 0.1 * accelerationLevel;
             }
@@ -203,6 +201,17 @@ class Helicopter extends GameObject{
                 speed = 0.1 * accelerationLevel;
             }
         }
+    }
+    public void fuelUsage(){
+        if(ignition){
+            if(chopperFuel >= 0){
+                chopperFuel -= 5 * Math.abs((.05 * accelerationLevel + 1));
+            }
+            else{
+                chopperFuel *= 0;
+            }
+        }
+        heliText.setText("F: " + chopperFuel);
     }
     public void ignition(){
         ignition = !ignition;
@@ -219,7 +228,6 @@ class Helicopter extends GameObject{
         if(speed > 0){
             this.rotate(this.getMyRotation() - 15);
         }
-
     }
     public void counterClockwiseTurn(){
         if(speed > 0){
@@ -239,6 +247,7 @@ class Helicopter extends GameObject{
         this.setTranslateX(this.getTranslateX() + velocityX);
         this.setTranslateY(this.getTranslateY() + velocityY);
         this.setPivot();
+        fuelUsage();
 /*        bigPropeller.update();
         bigPropeller.setPivot();
         smallPropeller.update();
@@ -251,7 +260,7 @@ class Helipad extends Pane{
     private static final int helipadHeight = 200;
     private static final int helipadRadius = 80;
     private static final int helipadStartX = -85;
-    private static final int helipadStartY = -90;
+    private static final int helipadStartY = -100;
     public Helipad(){
         Rectangle helipadRect = new Rectangle(helipadWidth, helipadHeight);
         helipadRect.setFill(Color.SANDYBROWN);
@@ -274,7 +283,8 @@ class Helipad extends Pane{
 
 class Cloud extends Pane{
     Random random = new Random();
-    double cloudRadius = 50;
+    private static final double cloudRadius = 50;
+    private double cloudSeed = 0;
     public Cloud(double upperMap, double lowerMap, double leftMap,
                  double rightMap){
         Circle cloud = new Circle();
@@ -286,13 +296,19 @@ class Cloud extends Pane{
         cloud.setTranslateX(
                 random.nextDouble((rightMap - cloudRadius))
                                                 + (leftMap + cloudRadius));
-        getChildren().add(cloud);
+        GameText cloudText = new GameText(
+                cloud.getTranslateX() - 14, cloud.getTranslateY() + 8,
+                Color.BLACK
+        );
+        cloudText.setText(cloudSeed + "%");
+        getChildren().addAll(cloud, cloudText);
     }
 }
 
 class Pond extends Pane{
     Random random = new Random();
-    double pondRadius = 30;
+    private static final double pondRadius = 30;
+    private int pondSaturation = 0;
     public Pond(double upperMap, double lowerMap, double leftMap,
                 double rightMap){
         Circle pond = new Circle();
@@ -304,18 +320,27 @@ class Pond extends Pane{
         pond.setTranslateX(
                 random.nextDouble((rightMap - pondRadius))
                                             + (leftMap + pondRadius));
-        getChildren().add(pond);
+        GameText pondText = new GameText(
+                pond.getTranslateX() - 8, pond.getTranslateY() + 5,
+                Color.WHITE
+        );
+        pondText.setText(pondSaturation + "%");
+        getChildren().addAll(pond, pondText);
     }
 }
 
 class GameText extends GameObject{
+    Text text = new Text();
     public GameText(double tx, double ty, Color color){
-        Text text = new Text();
+        text.setFont(Font.font(15));
         text.setFill(color);
         text.setScaleY(-1);
-        //rotate(degrees);
-        translate(tx, ty);
+        setTranslateX(tx);
+        setTranslateY(ty);
         add(text);
+    }
+    public void setText(String setString){
+        text.setText(setString);
     }
 }
 
@@ -371,14 +396,12 @@ class Game extends Pane{
 
 
 public class GameApp extends Application {
-    Pane root = new Pane();
     Point2D rainmakerApp = new Point2D(900, 1000);
     Game rainmaker = new Game();
     @Override
     public void start(Stage primaryStage) throws Exception {
-        Scene scene = new Scene(root, rainmakerApp.getX(),
+        Scene scene = new Scene(rainmaker, rainmakerApp.getX(),
                                 rainmakerApp.getY(), Color.SANDYBROWN);
-        root.getChildren().add(rainmaker);
         scene.setOnKeyPressed(new EventHandler<KeyEvent>() {
             @Override
             public void handle(KeyEvent event) {
@@ -403,15 +426,17 @@ public class GameApp extends Application {
                 }
                 if(event.getCode() == KeyCode.R){
                     rainmaker.restartGame();
-                    System.out.println(event.getCode());
+                }
+                if(event.getCode() == KeyCode.SPACE){
+
                 }
             }
 
         });
 
-        root.setScaleY(-1);
-        root.setTranslateX(438);
-        root.setTranslateY(-100);
+        rainmaker.setScaleY(-1);
+        rainmaker.setTranslateX(438);
+        rainmaker.setTranslateY(-130);
         rainmaker.game.start();
         primaryStage.setScene(scene);
         primaryStage.setResizable(false);
