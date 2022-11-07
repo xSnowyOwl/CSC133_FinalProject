@@ -106,7 +106,7 @@ class HelicopterBlade extends GameObject{
     }
 }
 
-class HelicopterPropeller extends GameObject{
+class HelicopterPropeller extends HelicopterBlade{
     public HelicopterBlade makeBlade(double tx, double ty, double sy,
                                      int degrees){
         HelicopterBlade blade = new HelicopterBlade();
@@ -114,9 +114,6 @@ class HelicopterPropeller extends GameObject{
         blade.scale(1, sy);
         blade.translate(tx, ty);
         return blade;
-    }
-    public void update(){
-        this.rotate(this.getMyRotation() + 3);
     }
 }
 
@@ -133,7 +130,9 @@ class BigPropeller extends HelicopterPropeller{
         add(makeBlade(14, 25, 1, 225));
         add(makeBlade(14, 25, 1, 315));
     }
-
+    public void update(){
+        this.rotate(this.getMyRotation() + 3);
+    }
     public void setPivot(){
         this.myRotation.setPivotX(this.myTranslation.getX() + 15);
         this.myRotation.setPivotY(this.myTranslation.getY() + 25);
@@ -162,18 +161,21 @@ class SmallPropeller extends HelicopterPropeller{
 }
 
 class Helicopter extends GameObject{
-    BigPropeller bigPropeller = new BigPropeller();
-    SmallPropeller smallPropeller = new SmallPropeller();
+    //BigPropeller bigPropeller = new BigPropeller();
+    //SmallPropeller smallPropeller = new SmallPropeller();
+    private double accelerationLevel = 0;
     private double speed = 0;
     private double velocityX = 0;
     private double velocityY = 0;
+    private boolean ignition = false;
+
 
     public Helicopter(){
         HelicopterBody body = new HelicopterBody();
         add(makeTail(10, -59, 0));
         add(body);
-        add(bigPropeller);
-        add(smallPropeller);
+        //add(bigPropeller);
+        //add(smallPropeller);
     }
     private HelicopterTail makeTail(double tx, double ty, int degrees){
         HelicopterTail tail = new HelicopterTail();
@@ -183,24 +185,42 @@ class Helicopter extends GameObject{
     }
 
     public void accelerate(){
-        if(speed < 2){
-            speed += .2;
+        if(ignition){
+            if(speed < 2){
+                accelerationLevel++;
+                speed = 0.2 * accelerationLevel;
+            }
         }
     }
     public void decelerate(){
-        if(speed > -2){
-            speed -= .2;
+        if(ignition){
+            if(speed > -2){
+                accelerationLevel--;
+                speed = 0.2 * accelerationLevel;
+            }
         }
+    }
+    public void ignition(){
+        ignition = !ignition;
+        System.out.println("Ignition Status: " + ignition);
+    }
+    public double getSpeed(){
+        return speed;
     }
     public void setPivot(){
         this.myRotation.setPivotX(this.myTranslation.getX() + 15);
         this.myRotation.setPivotY(this.myTranslation.getY() + 25);
     }
     public void clockwiseTurn(){
-        this.rotate(this.getMyRotation() - 3);
+        if(speed > 0){
+            this.rotate(this.getMyRotation() - 3);
+        }
+
     }
     public void counterClockwiseTurn(){
-        this.rotate(this.getMyRotation() + 3);
+        if(speed > 0){
+            this.rotate(this.getMyRotation() + 3);
+        }
     }
     public double getVelocityX(){
         velocityX = speed * cos(Math.toRadians(90 + getMyRotation()));
@@ -215,10 +235,10 @@ class Helicopter extends GameObject{
         this.setTranslateX(this.getTranslateX() + velocityX);
         this.setTranslateY(this.getTranslateY() + velocityY);
         this.setPivot();
-        bigPropeller.update();
+/*        bigPropeller.update();
         bigPropeller.setPivot();
         smallPropeller.update();
-        smallPropeller.setPivot();
+        smallPropeller.setPivot();*/
     }
 }
 
@@ -293,11 +313,11 @@ class Game extends Pane{
     Cloud cloud = new Cloud((APP_HEIGHT - 100),
             (helipad.getTranslateY() + 200),
             -438,
-            APP_WIDTH);
+            APP_WIDTH - 438);
     Pond pond = new Pond((APP_HEIGHT - 100),
             (helipad.getTranslateY() + 200),
             -438,
-            APP_WIDTH);
+            APP_WIDTH - 438);
 
     AnimationTimer game = new AnimationTimer() {
         double oldFrame = -1;
@@ -315,7 +335,7 @@ class Game extends Pane{
     };
 
     public Game(){
-        this.getChildren().addAll(helipad, choppah, cloud, pond);
+        this.getChildren().addAll(helipad, cloud, pond, choppah);
     }
 }
 
@@ -334,15 +354,22 @@ public class GameApp extends Application {
             public void handle(KeyEvent event) {
                 if(event.getCode() == KeyCode.UP) {
                     rainmaker.choppah.accelerate();
+                    System.out.println("Speed: " + rainmaker.choppah.getSpeed());
                 }
                 if(event.getCode() == KeyCode.DOWN){
                     rainmaker.choppah.decelerate();
+                    System.out.println("Speed: " + rainmaker.choppah.getSpeed());
                 }
                 if(event.getCode() == KeyCode.LEFT){
                     rainmaker.choppah.counterClockwiseTurn();
                 }
                 if(event.getCode() == KeyCode.RIGHT){
                     rainmaker.choppah.clockwiseTurn();
+                }
+                if(event.getCode() == KeyCode.I){
+                    if(rainmaker.choppah.getSpeed() == 0){
+                        rainmaker.choppah.ignition();
+                    }
                 }
             }
 
