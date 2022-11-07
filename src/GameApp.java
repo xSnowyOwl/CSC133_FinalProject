@@ -10,6 +10,7 @@ import javafx.scene.layout.Pane;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.Circle;
 import javafx.scene.shape.Ellipse;
+import javafx.scene.text.Text;
 import javafx.scene.transform.Rotate;
 import javafx.scene.transform.Scale;
 import javafx.scene.transform.Translate;
@@ -170,10 +171,13 @@ class Helicopter extends GameObject{
     private boolean ignition = false;
 
 
+
     public Helicopter(){
+        GameText heliText = new GameText(0, -60, Color.BLACK);
         HelicopterBody body = new HelicopterBody();
         add(makeTail(10, -59, 0));
         add(body);
+        add(heliText);
         //add(bigPropeller);
         //add(smallPropeller);
     }
@@ -188,7 +192,7 @@ class Helicopter extends GameObject{
         if(ignition){
             if(speed < 2){
                 accelerationLevel++;
-                speed = 0.2 * accelerationLevel;
+                speed = 0.1 * accelerationLevel;
             }
         }
     }
@@ -196,7 +200,7 @@ class Helicopter extends GameObject{
         if(ignition){
             if(speed > -2){
                 accelerationLevel--;
-                speed = 0.2 * accelerationLevel;
+                speed = 0.1 * accelerationLevel;
             }
         }
     }
@@ -213,13 +217,13 @@ class Helicopter extends GameObject{
     }
     public void clockwiseTurn(){
         if(speed > 0){
-            this.rotate(this.getMyRotation() - 3);
+            this.rotate(this.getMyRotation() - 15);
         }
 
     }
     public void counterClockwiseTurn(){
         if(speed > 0){
-            this.rotate(this.getMyRotation() + 3);
+            this.rotate(this.getMyRotation() + 15);
         }
     }
     public double getVelocityX(){
@@ -304,6 +308,17 @@ class Pond extends Pane{
     }
 }
 
+class GameText extends GameObject{
+    public GameText(double tx, double ty, Color color){
+        Text text = new Text();
+        text.setFill(color);
+        text.setScaleY(-1);
+        //rotate(degrees);
+        translate(tx, ty);
+        add(text);
+    }
+}
+
 
 class Game extends Pane{
     private final static double APP_WIDTH = 900;
@@ -334,9 +349,24 @@ class Game extends Pane{
         }
     };
 
-    public Game(){
-        this.getChildren().addAll(helipad, cloud, pond, choppah);
+    public void restartGame(){
+        this.getChildren().clear();
+        this.getChildren().addAll(new Helipad(),
+                new Pond((APP_HEIGHT - 100),
+                (helipad.getTranslateY() + 200),
+                -438,
+                APP_WIDTH - 438),
+                new Cloud((APP_HEIGHT - 100),
+                (helipad.getTranslateY() + 200),
+                -438,
+                APP_WIDTH - 438),
+                new Helicopter());
     }
+
+    public Game(){
+        this.getChildren().addAll(helipad, pond, cloud, choppah);
+    }
+
 }
 
 
@@ -370,6 +400,10 @@ public class GameApp extends Application {
                     if(rainmaker.choppah.getSpeed() == 0){
                         rainmaker.choppah.ignition();
                     }
+                }
+                if(event.getCode() == KeyCode.R){
+                    rainmaker.restartGame();
+                    System.out.println(event.getCode());
                 }
             }
 
