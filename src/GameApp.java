@@ -87,6 +87,7 @@ class Helicopter extends GameObject{
     private boolean ignition;
     private int chopperFuel;
     GameText heliText = new GameText(-11, -35, Color.LEMONCHIFFON);
+    Cloud cloud = new Cloud();
 
     public Helicopter(){
         speed = 0;
@@ -201,8 +202,9 @@ class Helipad extends Pane{
 
 class Cloud extends Pane{
     Random random = new Random();
+    Helicopter choppah = new Helicopter();
     private static final double cloudRadius = 50;
-    private double cloudSeed = 0;
+    private int cloudSeed = 0;
     public Cloud() {
         Circle cloud = new Circle();
         cloud.setFill(Color.WHITE);
@@ -219,6 +221,9 @@ class Cloud extends Pane{
         );
         cloudText.setText(cloudSeed + "%");
         getChildren().addAll(cloud, cloudText);
+    }
+    public void seedCloud(){
+
     }
     public double randomNumberGenerator(double min, double max){
         return min + ((max - min) + 1) * random.nextDouble();
@@ -278,14 +283,13 @@ class Game extends Pane{
             double frameTime = (currentFrame - oldFrame) / 1e9;
             oldFrame = currentFrame;
             elapsedTime += frameTime;
+
             choppah.update();
         }
     };
-
     public Game(){
         super.setScaleY(-1);
     }
-
     public void init(){
         this.getChildren().clear();
         this.getChildren().addAll(new Helipad(), new Pond(), new Cloud(),
