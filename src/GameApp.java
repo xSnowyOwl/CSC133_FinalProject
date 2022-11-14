@@ -6,6 +6,7 @@ import javafx.scene.Node;
 import javafx.scene.Scene;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyEvent;
+import javafx.scene.layout.AnchorPane;
 import javafx.scene.layout.Pane;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.Circle;
@@ -18,6 +19,8 @@ import javafx.scene.transform.Translate;
 import javafx.stage.Stage;
 import javafx.scene.shape.Rectangle;
 import javafx.geometry.Point2D;
+
+import java.net.http.HttpResponse;
 import java.util.Random;
 import static java.lang.Math.cos;
 import static java.lang.Math.sin;
@@ -70,51 +73,118 @@ abstract class GameObject extends Group implements Updatable{
 }
 
 class Globals{
-    final static double APP_WIDTH = 400;
+    final static double APP_WIDTH = 800;
     final static double APP_HEIGHT = 800;
     final static double ONE_THIRD_APP_HEIGHT = APP_HEIGHT / 3;
 }
 
 class Helicopter extends GameObject{
-    private final double chopperBodyWidth = 20;
+    private final double chopperBodyWidth = 17;
     private final double chopperBodyHeight = 30;
-    private final double chopperTailWidth = 6;
-    private final double chopperTailHeight = 35;
+    private final double chopperTailWidth = 5;
+    private final double chopperTailHeight = 28;
     private double accelerationLevel = 0;
     private static double speed;
     private double velocityX = 0;
     private double velocityY = 0;
-    private boolean ignition;
+    private boolean isReady;
     private int chopperFuel;
     GameText heliText = new GameText(-11, -35, Color.LEMONCHIFFON);
-    Cloud cloud = new Cloud();
+    HelicopterBlade blade = new HelicopterBlade();
 
     public Helicopter(){
         speed = 0;
-        ignition = false;
+        isReady = false;
         chopperFuel = 25000;
         heliText.setText("F: " + chopperFuel);
 
-        Rectangle chopperBody = new Rectangle();
-        chopperBody.setWidth(chopperBodyWidth);
-        chopperBody.setHeight(chopperBodyHeight);
+        Circle chopperBody = new Circle();
+        chopperBody.setRadius(chopperBodyWidth);
         chopperBody.setFill(Color.LEMONCHIFFON);
+        chopperBody.setTranslateX(10);
+        chopperBody.setTranslateY(15);
+
+        Rectangle chopperButt = new Rectangle();
+        chopperButt.setHeight(8);
+        chopperButt.setWidth(28);
+        chopperButt.setFill(Color.LEMONCHIFFON);
+        chopperButt.setTranslateX(-4);
+        chopperButt.setTranslateY(-2);
 
         Rectangle chopperTail = new Rectangle();
         chopperTail.setWidth(chopperTailWidth);
         chopperTail.setHeight(chopperTailHeight);
         chopperTail.setFill(Color.LEMONCHIFFON);
-        chopperTail.setTranslateX(7);
-        chopperTail.setTranslateY(-34);
+        chopperTail.setTranslateX(8);
+        chopperTail.setTranslateY(-29);
 
-        translate(190, 110);
+        Rectangle frontConnector = new Rectangle();
+        frontConnector.setWidth(45);
+        frontConnector.setHeight(2);
+        frontConnector.setFill(Color.DARKGREY);
+        frontConnector.setTranslateX(-12);
+        frontConnector.setTranslateY(20);
 
+        Rectangle backConnector = new Rectangle();
+        backConnector.setWidth(45);
+        backConnector.setHeight(2);
+        backConnector.setFill(Color.DARKGREY);
+        backConnector.setTranslateX(-12);
+
+        Rectangle chopperLeftLeg = new Rectangle();
+        chopperLeftLeg.setHeight(40);
+        chopperLeftLeg.setWidth(4);
+        chopperLeftLeg.setFill(Color.DARKSLATEGREY);
+        chopperLeftLeg.setTranslateX(-16);
+        chopperLeftLeg.setTranslateY(-10);
+
+        Rectangle chopperRightLeg = new Rectangle();
+        chopperRightLeg.setHeight(40);
+        chopperRightLeg.setWidth(4);
+        chopperRightLeg.setFill(Color.DARKSLATEGREY);
+        chopperRightLeg.setTranslateX(32);
+        chopperRightLeg.setTranslateY(-10);
+
+        Rectangle tailRotor = new Rectangle();
+        tailRotor.setWidth(10);
+        tailRotor.setHeight(2);
+        tailRotor.setFill(Color.WHITE);
+        tailRotor.setTranslateX(6);
+        tailRotor.setTranslateY(-28);
+
+        Rectangle tailBlade = new Rectangle();
+        tailBlade.setWidth(2);
+        tailBlade.setHeight(8);
+        tailBlade.setFill(Color.BLACK);
+        tailBlade.setTranslateX(16);
+        tailBlade.setTranslateY(-31);
+
+        Circle bodyRotor = new Circle();
+        bodyRotor.setRadius(2);
+        bodyRotor.setFill(Color.WHITE);
+        bodyRotor.setTranslateX(10);
+        bodyRotor.setTranslateY(7);
+
+        translate(Globals.APP_WIDTH / 2 - chopperBodyWidth + 7,
+                108);
+
+        blade.translate(chopperBodyWidth / 2 - 2,
+                chopperBodyHeight - 72);
+        add(frontConnector);
+        add(backConnector);
         add(chopperBody);
+        add(chopperButt);
+        add(tailRotor);
+        add(tailBlade);
         add(chopperTail);
+        add(chopperLeftLeg);
+        add(chopperRightLeg);
+        add(blade);
+        add(bodyRotor);
         add(heliText);
     }
     public void accelerate(){
-        if(ignition){
+        if(isReady){
             if(speed < 10){
                 accelerationLevel++;
                 speed = 0.1 * accelerationLevel;
@@ -122,7 +192,7 @@ class Helicopter extends GameObject{
         }
     }
     public void decelerate(){
-        if(ignition){
+        if(isReady){
             if(speed > -2){
                 accelerationLevel--;
                 speed = 0.1 * accelerationLevel;
@@ -130,7 +200,7 @@ class Helicopter extends GameObject{
         }
     }
     public void fuelDepletion(){
-        if(ignition){
+        if(isReady){
             if(chopperFuel >= 0){
                 chopperFuel -= 5 * Math.abs((.05 * accelerationLevel + 1));
             }
@@ -141,8 +211,8 @@ class Helicopter extends GameObject{
         heliText.setText("F: " + chopperFuel);
     }
     public void ignition(){
-        ignition = !ignition;
-        System.out.println("Ignition Status: " + ignition);
+        isReady = !isReady;
+        System.out.println("Ignition Status: " + isReady);
     }
     public double getSpeed(){
         return speed;
@@ -153,12 +223,12 @@ class Helicopter extends GameObject{
     }
     public void clockwiseTurn(){
         if(speed > 0){
-            this.rotate(this.getMyRotation() - 15);
+            rotate(getMyRotation() - 15);
         }
     }
     public void counterClockwiseTurn(){
         if(speed > 0){
-            this.rotate(this.getMyRotation() + 15);
+            rotate(getMyRotation() + 15);
         }
     }
     public double getVelocityX(){
@@ -169,11 +239,34 @@ class Helicopter extends GameObject{
         velocityY = speed * cos(Math.toRadians(getMyRotation()));
         return velocityY;
     }
+    public void moveHeli(){
+        translate(myTranslation.getX() + getVelocityX(),
+                myTranslation.getY() + getVelocityY());
+    }
     public void update(){
-        this.translate(this.myTranslation.getX() + getVelocityX(),
-                        this.myTranslation.getY() + getVelocityY());
-        this.setPivot();
+        moveHeli();
+        setPivot();
+        blade.rotateBlade();
+        blade.setPivot();
         fuelDepletion();
+    }
+}
+class HelicopterBlade extends GameObject{
+    public HelicopterBlade(){
+        Rectangle heliBlade = new Rectangle();
+        heliBlade.setWidth(5);
+        heliBlade.setHeight(100);
+        heliBlade.setFill(Color.BLACK);
+        heliBlade.setStroke(Color.WHITE);
+        heliBlade.setRotate(45);
+        add(heliBlade);
+    }
+    public void rotateBlade(){
+        rotate(getMyRotation() + 20);
+    }
+    public void setPivot(){
+        this.myRotation.setPivotX(3);
+        this.myRotation.setPivotY(49);
     }
 }
 
@@ -186,27 +279,29 @@ class Helipad extends Pane{
         helipadRect.setFill(Color.SANDYBROWN);
         helipadRect.setStroke(Color.BLACK);
         helipadRect.setStrokeWidth(2);
-        helipadRect.setTranslateX(150);
+        helipadRect.setTranslateX(Globals.APP_WIDTH / 2 - helipadWidth / 2);
         helipadRect.setTranslateY(50);
 
         Ellipse helipadCircle = new Ellipse(helipadRadius, helipadRadius);
         helipadCircle.setFill(Color.SADDLEBROWN);
         helipadCircle.setStroke(Color.WHITE);
         helipadCircle.setStrokeWidth(2);
-        helipadCircle.setTranslateX(200);
+        helipadCircle.setTranslateX(Globals.APP_WIDTH / 2);
         helipadCircle.setTranslateY(100);
 
         this.getChildren().addAll(helipadRect, helipadCircle);
     }
 }
 
-class Cloud extends Pane{
+class Cloud extends GameObject{
     Random random = new Random();
-    Helicopter choppah = new Helicopter();
+    Circle cloud;
+    Helicopter helicopter;
+    GameText cloudText = new GameText(-14, 8, Color.BLACK);
     private static final double cloudRadius = 50;
     private int cloudSeed = 0;
     public Cloud() {
-        Circle cloud = new Circle();
+        cloud = new Circle();
         cloud.setFill(Color.WHITE);
         cloud.setRadius(cloudRadius);
         cloud.setTranslateX(
@@ -215,25 +310,44 @@ class Cloud extends Pane{
         cloud.setTranslateY(
                 randomNumberGenerator(Globals.ONE_THIRD_APP_HEIGHT + cloudRadius
                                      ,Globals.APP_HEIGHT - cloudRadius));
-        GameText cloudText = new GameText(
-                cloud.getTranslateX() - 14, cloud.getTranslateY() + 8,
-                Color.BLACK
-        );
+        cloudText.setTranslateX(cloud.getTranslateX());
+        cloudText.setTranslateY(cloud.getTranslateY());
         cloudText.setText(cloudSeed + "%");
         getChildren().addAll(cloud, cloudText);
     }
+    public void moveCloud(){
+        translate(myTranslation.getX() + 1, 0);
+    }
     public void seedCloud(){
-
+        if(cloudSeed < 100){
+            this.cloudSeed++;
+            this.cloudText.setText(cloudSeed + "%");
+        }
+    }
+    public void saturateCloud(){
+        cloud.setFill(Color.color(1 - (cloudSeed * .0045),
+                1 - (cloudSeed * .0045), 1 - (cloudSeed * .0045)));
+    }
+    public Cloud getCloud(){
+        return this;
+    }
+    public boolean isHelicopterInCloud(){
+        return cloud.getBoundsInParent().intersects(
+                helicopter.getBoundsInParent());
     }
     public double randomNumberGenerator(double min, double max){
         return min + ((max - min) + 1) * random.nextDouble();
+    }
+    public void update(){
+        //this.moveCloud();
+        this.saturateCloud();
     }
 }
 
 class Pond extends Pane{
     Random random = new Random();
     private static final double pondRadius = 30;
-    private double pondSeed = 0;
+    private int pondSeed = 0;
     public Pond() {
         Circle pond = new Circle();
         pond.setFill(Color.DEEPSKYBLUE);
@@ -272,6 +386,8 @@ class GameText extends GameObject{
 
 class Game extends Pane{
     Helicopter choppah = new Helicopter();
+    Cloud cloud = new Cloud();
+    Pond pond = new Pond();
 
     AnimationTimer game = new AnimationTimer() {
         double oldFrame = -1;
@@ -285,6 +401,7 @@ class Game extends Pane{
             elapsedTime += frameTime;
 
             choppah.update();
+            cloud.update();
         }
     };
     public Game(){
@@ -292,7 +409,9 @@ class Game extends Pane{
     }
     public void init(){
         this.getChildren().clear();
-        this.getChildren().addAll(new Helipad(), new Pond(), new Cloud(),
+        this.getChildren().addAll(new Helipad(),
+                pond = new Pond(),
+                cloud = new Cloud(),
                 choppah = new Helicopter());
     }
 }
@@ -330,7 +449,10 @@ public class GameApp extends Application {
                     rainmaker.init();
                 }
                 if(event.getCode() == KeyCode.SPACE){
-
+/*                    if(rainmaker.cloud.isHelicopterInCloud()){
+                        rainmaker.cloud.seedCloud();
+                    }*/
+                    rainmaker.cloud.seedCloud();
                 }
             }
         });
