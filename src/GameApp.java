@@ -246,7 +246,9 @@ class Helicopter extends GameObject{
     public void update(){
         moveHeli();
         setPivot();
-        blade.rotateBlade();
+        if(isReady){
+            blade.rotateBlade();
+        }
         blade.setPivot();
         fuelDepletion();
     }
@@ -299,8 +301,10 @@ class Cloud extends GameObject{
     Helicopter helicopter;
     GameText cloudText = new GameText(-14, 8, Color.BLACK);
     private static final double cloudRadius = 50;
+    private double cloudVelocityX;
     private int cloudSeed = 0;
     public Cloud() {
+        cloudVelocityX = randomNumberGenerator(0.1, 1);
         cloud = new Circle();
         cloud.setFill(Color.WHITE);
         cloud.setRadius(cloudRadius);
@@ -316,7 +320,8 @@ class Cloud extends GameObject{
         getChildren().addAll(cloud, cloudText);
     }
     public void moveCloud(){
-        translate(myTranslation.getX() + 1, 0);
+        translate(myTranslation.getX() + cloudVelocityX,
+                0);
     }
     public void seedCloud(){
         if(cloudSeed < 100){
@@ -328,9 +333,6 @@ class Cloud extends GameObject{
         cloud.setFill(Color.color(1 - (cloudSeed * .0045),
                 1 - (cloudSeed * .0045), 1 - (cloudSeed * .0045)));
     }
-    public Cloud getCloud(){
-        return this;
-    }
     public boolean isHelicopterInCloud(){
         return cloud.getBoundsInParent().intersects(
                 helicopter.getBoundsInParent());
@@ -339,7 +341,7 @@ class Cloud extends GameObject{
         return min + ((max - min) + 1) * random.nextDouble();
     }
     public void update(){
-        //this.moveCloud();
+        this.moveCloud();
         this.saturateCloud();
     }
 }
