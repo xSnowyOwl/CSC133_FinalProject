@@ -1,6 +1,8 @@
 import javafx.animation.AnimationTimer;
 import javafx.application.Application;
 import javafx.event.EventHandler;
+import javafx.geometry.BoundingBox;
+import javafx.geometry.Bounds;
 import javafx.scene.Group;
 import javafx.scene.Node;
 import javafx.scene.Scene;
@@ -89,6 +91,7 @@ class Helicopter extends GameObject{
     private double velocityY = 0;
     private boolean isReady;
     private int chopperFuel;
+    Bounds chopperBounds;
     GameText heliText = new GameText(-11, -35, Color.LEMONCHIFFON);
     HelicopterBlade blade = new HelicopterBlade();
 
@@ -97,6 +100,10 @@ class Helicopter extends GameObject{
         isReady = false;
         chopperFuel = 25000;
         heliText.setText("F: " + chopperFuel);
+        chopperBounds = new BoundingBox(
+                myTranslation.getX(), myTranslation.getY(), chopperBodyWidth,
+                chopperBodyHeight
+        );
 
         Circle chopperBody = new Circle();
         chopperBody.setRadius(chopperBodyWidth);
@@ -182,6 +189,12 @@ class Helicopter extends GameObject{
         add(blade);
         add(bodyRotor);
         add(heliText);
+    }
+    public double getChopperBodyWidth(){
+        return chopperBodyWidth;
+    }
+    public double getChopperBodyHeight(){
+        return chopperBodyHeight;
     }
     public void accelerate(){
         if(isReady){
@@ -298,56 +311,61 @@ class Helipad extends Pane{
 class Cloud extends GameObject{
     Random random = new Random();
     Circle cloud;
-    Helicopter helicopter;
+    Bounds cloudBounds;
     GameText cloudText = new GameText(-14, 8, Color.BLACK);
-    private static final double cloudRadius = 50;
-    private double cloudVelocityX;
+    private static final int cloudRadius = 75;
+    private double cloudVelocity;
     private int cloudSeed = 0;
     public Cloud() {
-        cloudVelocityX = randomNumberGenerator(0.1, 1);
+        cloudVelocity = randomNumberGenerator(0.1, 1);
         cloud = new Circle();
         cloud.setFill(Color.WHITE);
         cloud.setRadius(cloudRadius);
-        cloud.setTranslateX(
-                randomNumberGenerator(0 + cloudRadius,
-                                        Globals.APP_WIDTH - cloudRadius));
-        cloud.setTranslateY(
-                randomNumberGenerator(Globals.ONE_THIRD_APP_HEIGHT + cloudRadius
-                                     ,Globals.APP_HEIGHT - cloudRadius));
+        translate(randomNumberGenerator(0 + cloudRadius,
+                Globals.APP_WIDTH - cloudRadius), randomNumberGenerator(
+                        Globals.ONE_THIRD_APP_HEIGHT + cloudRadius
+                ,Globals.APP_HEIGHT - cloudRadius));
         cloudText.setTranslateX(cloud.getTranslateX());
         cloudText.setTranslateY(cloud.getTranslateY());
         cloudText.setText(cloudSeed + "%");
+        cloudBounds = new BoundingBox(this.getTranslateX(),
+                this.getTranslateY(), cloudRadius * 2, cloudRadius * 2);
         getChildren().addAll(cloud, cloudText);
     }
     public void moveCloud(){
-        translate(myTranslation.getX() + cloudVelocityX,
-                0);
+        translate(this.myTranslation.getX() + cloudVelocity,
+                this.myTranslation.getY());
     }
-    public void seedCloud(){
-        if(cloudSeed < 100){
+    public int getRadius(){
+        return cloudRadius;
+    }
+    public int getCloudSeed(){
+        return cloudSeed;
+    }
+    public void seedingCloud(){
+        if(this.cloudSeed < 100){
             this.cloudSeed++;
             this.cloudText.setText(cloudSeed + "%");
+            System.out.println("Cloud is being seeded.");
         }
     }
     public void saturateCloud(){
         cloud.setFill(Color.color(1 - (cloudSeed * .0045),
                 1 - (cloudSeed * .0045), 1 - (cloudSeed * .0045)));
     }
-    public boolean isHelicopterInCloud(){
-        return cloud.getBoundsInParent().intersects(
-                helicopter.getBoundsInParent());
-    }
     public double randomNumberGenerator(double min, double max){
         return min + ((max - min) + 1) * random.nextDouble();
     }
     public void update(){
-        this.moveCloud();
+        //this.moveCloud();
         this.saturateCloud();
     }
 }
 
 class Pond extends Pane{
     Random random = new Random();
+    GameText pondText;
+    Cloud cloud;
     private static final double pondRadius = 30;
     private int pondSeed = 0;
     public Pond() {
@@ -360,15 +378,22 @@ class Pond extends Pane{
         pond.setTranslateY(
                 randomNumberGenerator(Globals.ONE_THIRD_APP_HEIGHT - pondRadius,
                                       Globals.APP_HEIGHT - pondRadius));
-        GameText cloudText = new GameText(
+        pondText = new GameText(
                 pond.getTranslateX() - 12, pond.getTranslateY() + 7,
                 Color.BLACK
         );
-        cloudText.setText(pondSeed + "%");
-        getChildren().addAll(pond, cloudText);
+        pondText.setText(pondSeed + "%");
+        getChildren().addAll(pond, pondText);
+    }
+    public void seedPond(double timeInSeconds){
+        pondSeed += timeInSeconds;
+        pondText.setText(pondSeed + "%");
     }
     public double randomNumberGenerator(double min, double max){
         return min + ((max - min) + 1) * random.nextDouble();
+    }
+    public void update(double timeInSeconds){
+        seedPond(timeInSeconds);
     }
 }
 
@@ -400,10 +425,10 @@ class Game extends Pane{
             if(oldFrame < 0) oldFrame = currentFrame;
             double frameTime = (currentFrame - oldFrame) / 1e9;
             oldFrame = currentFrame;
-            elapsedTime += frameTime;
 
             choppah.update();
             cloud.update();
+            pond.update(frameTime);
         }
     };
     public Game(){
@@ -415,6 +440,30 @@ class Game extends Pane{
                 pond = new Pond(),
                 cloud = new Cloud(),
                 choppah = new Helicopter());
+    }
+    public boolean isHelicopterColliding(Helicopter helicopter, Cloud cloud){
+        if(this.cloud.myTranslation.getX() - cloud.getRadius() <
+                helicopter.myTranslation.getX() &&
+                this.cloud.myTranslation.getY() - cloud.getRadius() <
+                        helicopter.myTranslation.getY() &&
+                this.cloud.myTranslation.getX() + cloud.getRadius() >
+                        helicopter.myTranslation.getX() +
+                                helicopter.getChopperBodyWidth() &&
+                this.cloud.myTranslation.getY() + cloud.getRadius() >
+                        helicopter.myTranslation.getY() +
+                                helicopter.getChopperBodyHeight()
+        ){
+            return true;
+        }
+        else {
+            return false;
+        }
+    }
+    public void seedCloud(){
+        if(isHelicopterColliding(choppah, cloud)){
+            cloud.seedingCloud();
+            System.out.println("Helicopter is in cloud.");
+        }
     }
 }
 
@@ -451,10 +500,10 @@ public class GameApp extends Application {
                     rainmaker.init();
                 }
                 if(event.getCode() == KeyCode.SPACE){
-/*                    if(rainmaker.cloud.isHelicopterInCloud()){
-                        rainmaker.cloud.seedCloud();
-                    }*/
-                    rainmaker.cloud.seedCloud();
+                    rainmaker.seedCloud();
+                    System.out.println(event.getCode());
+                    System.out.println("Helicopter X: " + rainmaker.choppah.myTranslation.getX());
+                    System.out.println("Cloud X: " + rainmaker.cloud.myTranslation.getX());
                 }
             }
         });
