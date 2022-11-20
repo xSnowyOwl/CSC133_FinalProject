@@ -23,6 +23,7 @@ import javafx.scene.shape.Rectangle;
 import javafx.geometry.Point2D;
 
 import java.net.http.HttpResponse;
+import java.security.Key;
 import java.util.Random;
 import static java.lang.Math.cos;
 import static java.lang.Math.sin;
@@ -366,6 +367,7 @@ class Pond extends Pane{
     Random random = new Random();
     GameText pondText;
     Cloud cloud;
+    private static double seedTime = 0;
     private static final double pondRadius = 30;
     private int pondSeed = 0;
     public Pond() {
@@ -385,15 +387,24 @@ class Pond extends Pane{
         pondText.setText(pondSeed + "%");
         getChildren().addAll(pond, pondText);
     }
-    public void seedPond(double timeInSeconds){
-        pondSeed += timeInSeconds;
+    public void seedPond(){
+        seedTime++;
+        if(seedTime % 60 == 0 ){
+            pondSeed++;
+        }
         pondText.setText(pondSeed + "%");
+    }
+    public double getSeedTime(){
+        return seedTime;
+    }
+    public int getPondSeed(){
+        return pondSeed;
     }
     public double randomNumberGenerator(double min, double max){
         return min + ((max - min) + 1) * random.nextDouble();
     }
-    public void update(double timeInSeconds){
-        seedPond(timeInSeconds);
+    public void update(){
+        seedPond();
     }
 }
 
@@ -419,16 +430,18 @@ class Game extends Pane{
     AnimationTimer game = new AnimationTimer() {
         double oldFrame = -1;
         double elapsedTime = 0;
-        int frameCount = 0;
         @Override
         public void handle(long currentFrame) {
             if(oldFrame < 0) oldFrame = currentFrame;
             double frameTime = (currentFrame - oldFrame) / 1e9;
             oldFrame = currentFrame;
+            elapsedTime += frameTime;
 
             choppah.update();
             cloud.update();
-            pond.update(frameTime);
+            if(cloud.getCloudSeed() >= 30){
+                pond.update();
+            }
         }
     };
     public Game(){
@@ -501,9 +514,10 @@ public class GameApp extends Application {
                 }
                 if(event.getCode() == KeyCode.SPACE){
                     rainmaker.seedCloud();
-                    System.out.println(event.getCode());
-                    System.out.println("Helicopter X: " + rainmaker.choppah.myTranslation.getX());
-                    System.out.println("Cloud X: " + rainmaker.cloud.myTranslation.getX());
+                }
+                if(event.getCode() == KeyCode.M){
+                    System.out.println("Pond Seed Time: " + rainmaker.pond.getSeedTime());
+                    System.out.println("Current Pond Seed: " + rainmaker.pond.getPondSeed());
                 }
             }
         });
