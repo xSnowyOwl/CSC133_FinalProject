@@ -317,6 +317,7 @@ class Cloud extends GameObject{
     private static final int cloudRadius = 75;
     private double cloudVelocity;
     private int cloudSeed = 0;
+    private int decayTime = 0;
     public Cloud() {
         cloudVelocity = randomNumberGenerator(0.1, 1);
         cloud = new Circle();
@@ -350,6 +351,15 @@ class Cloud extends GameObject{
             System.out.println("Cloud is being seeded.");
         }
     }
+    public void decayingCloud(){
+        if(this.cloudSeed > 0){
+            this.decayTime++;
+            if(this.decayTime % 60 == 0){
+                this.cloudSeed--;
+            }
+        }
+        this.cloudText.setText(cloudSeed + "%");
+    }
     public void saturateCloud(){
         cloud.setFill(Color.color(1 - (cloudSeed * .0045),
                 1 - (cloudSeed * .0045), 1 - (cloudSeed * .0045)));
@@ -360,6 +370,7 @@ class Cloud extends GameObject{
     public void update(){
         //this.moveCloud();
         this.saturateCloud();
+        this.decayingCloud();
     }
 }
 
@@ -388,9 +399,11 @@ class Pond extends Pane{
         getChildren().addAll(pond, pondText);
     }
     public void seedPond(){
-        seedTime++;
-        if(seedTime % 60 == 0 ){
-            pondSeed++;
+        if(pondSeed < 100){
+            seedTime++;
+            if(seedTime % 60 == 0 ){
+                pondSeed++;
+            }
         }
         pondText.setText(pondSeed + "%");
     }
