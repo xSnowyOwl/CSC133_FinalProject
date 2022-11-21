@@ -323,6 +323,7 @@ class Cloud extends GameObject{
         cloud = new Circle();
         cloud.setFill(Color.WHITE);
         cloud.setRadius(cloudRadius);
+        cloud.setOpacity(.75);
         translate(randomNumberGenerator(0 + cloudRadius,
                 Globals.APP_WIDTH - cloudRadius), randomNumberGenerator(
                         Globals.ONE_THIRD_APP_HEIGHT + cloudRadius
@@ -377,10 +378,9 @@ class Cloud extends GameObject{
 class Pond extends Pane{
     Random random = new Random();
     GameText pondText;
-    Cloud cloud;
     private static double seedTime = 0;
     private static final double pondRadius = 30;
-    private int pondSeed = 0;
+    private int pondSeed = random.nextInt(30);
     public Pond() {
         Circle pond = new Circle();
         pond.setFill(Color.DEEPSKYBLUE);
@@ -532,6 +532,10 @@ public class GameApp extends Application {
                     System.out.println("Pond Seed Time: " + rainmaker.pond.getSeedTime());
                     System.out.println("Current Pond Seed: " + rainmaker.pond.getPondSeed());
                 }
+                if(event.getCode() == KeyCode.D){
+                    //rainmaker.toggleDistanceLines();
+                    System.out.println("Distance lines toggled!");
+                }
             }
         });
         rainmaker.game.start();
@@ -544,3 +548,12 @@ public class GameApp extends Application {
         Application.launch(args);
     }
 }
+/*
+* TODO LIST:
+*  -State patterns
+*  //Search: Java How to create objects of class without name//
+*  -Multiple Ponds (non-intersecting)
+*  -Multiple Clouds (3 - 5 clouds at all times)
+*  -Calculate distance between clouds and ponds
+*  -Distance lines for clouds and ponds (toggle with 'D')
+* */
