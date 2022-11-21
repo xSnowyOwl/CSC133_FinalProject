@@ -6,6 +6,7 @@ import javafx.geometry.Bounds;
 import javafx.scene.Group;
 import javafx.scene.Node;
 import javafx.scene.Scene;
+import javafx.scene.canvas.GraphicsContext;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyEvent;
 import javafx.scene.layout.AnchorPane;
@@ -13,6 +14,7 @@ import javafx.scene.layout.Pane;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.Circle;
 import javafx.scene.shape.Ellipse;
+import javafx.scene.shape.Line;
 import javafx.scene.text.Font;
 import javafx.scene.text.Text;
 import javafx.scene.transform.Rotate;
@@ -22,8 +24,11 @@ import javafx.stage.Stage;
 import javafx.scene.shape.Rectangle;
 import javafx.geometry.Point2D;
 
+import java.awt.*;
 import java.net.http.HttpResponse;
 import java.security.Key;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Random;
 import static java.lang.Math.cos;
 import static java.lang.Math.sin;
@@ -375,6 +380,18 @@ class Cloud extends GameObject{
     }
 }
 
+class Clouds extends Pane{
+    List<Cloud> clouds = new ArrayList<>();
+    public Clouds(){
+
+    }
+    public void checkClouds(){
+        if(clouds.size() < 3){
+            clouds.add(new Cloud());
+        }
+    }
+}
+
 class Pond extends Pane{
     Random random = new Random();
     GameText pondText;
@@ -435,10 +452,28 @@ class GameText extends GameObject{
     }
 }
 
+class DistanceLines extends Pane{
+    Line distanceLine;
+    public DistanceLines(Cloud cloud, Pond pond) {
+        distanceLine = new Line(cloud.myTranslation.getX(),
+                cloud.myTranslation.getY(), pond.getTranslateX(), pond.getTranslateY());
+        distanceLine.setStroke(Color.BLACK);
+        getChildren().add(distanceLine);
+    }
+
+    public void update(Cloud cloud, Pond pond){
+        this.getChildren().clear();
+        distanceLine = new Line(cloud.myTranslation.getX(),
+                cloud.myTranslation.getY(), pond.getTranslateX(), pond.getTranslateY());
+    }
+}
+
 class Game extends Pane{
     Helicopter choppah = new Helicopter();
     Cloud cloud = new Cloud();
     Pond pond = new Pond();
+    Clouds cloudySky;
+    DistanceLines distanceLine;
 
     AnimationTimer game = new AnimationTimer() {
         double oldFrame = -1;
@@ -455,6 +490,8 @@ class Game extends Pane{
             if(cloud.getCloudSeed() >= 30){
                 pond.update();
             }
+            //cloudySky.checkClouds();
+            //distanceLine.update(cloud, pond);
         }
     };
     public Game(){
@@ -550,10 +587,12 @@ public class GameApp extends Application {
 }
 /*
 * TODO LIST:
-*  -State patterns
+*  -State patterns:
+*    *Helicopter
+*    *Clouds
 *  //Search: Java How to create objects of class without name//
 *  -Multiple Ponds (non-intersecting)
 *  -Multiple Clouds (3 - 5 clouds at all times)
 *  -Calculate distance between clouds and ponds
-*  -Distance lines for clouds and ponds (toggle with 'D')
+*  -Distance lines for clouds and ponds (toggle with 'D') *in progress*
 * */
