@@ -381,14 +381,29 @@ class Cloud extends GameObject{
 }
 
 class Clouds extends Pane{
-    List<Cloud> clouds = new ArrayList<>();
+    List<Cloud> clouds;
+    Random random;
     public Clouds(){
-
+        clouds = new ArrayList<>();
+        //clouds.add(new Cloud());
+        getChildren().addAll(clouds);
     }
-    public void checkClouds(){
+    public void update(){
         if(clouds.size() < 3){
             clouds.add(new Cloud());
+            //getChildren().add(clouds.get(0));
+            System.out.println("New Cloud Added!");
+            System.out.println("Total clouds in game: " + clouds.size());
+            System.out.println("Cloud X: " + clouds.get(0).myTranslation.getX());
+            System.out.println("Cloud Y: " + clouds.get(0).myTranslation.getY());
         }
+/*        else if(clouds.size() < 5){
+            if(random.nextDouble(1) == 1){
+                clouds.add(new Cloud());
+                System.out.println("New Cloud Added!");
+                System.out.println("Total Clouds in game: " + clouds.size());
+            }
+        }*/
     }
 }
 
@@ -490,7 +505,7 @@ class Game extends Pane{
             if(cloud.getCloudSeed() >= 30){
                 pond.update();
             }
-            //cloudySky.checkClouds();
+            cloudySky.update();
             //distanceLine.update(cloud, pond);
         }
     };
@@ -502,17 +517,18 @@ class Game extends Pane{
         this.getChildren().addAll(new Helipad(),
                 pond = new Pond(),
                 cloud = new Cloud(),
+                cloudySky = new Clouds(),
                 choppah = new Helicopter());
     }
     public boolean isHelicopterColliding(Helicopter helicopter, Cloud cloud){
-        if(this.cloud.myTranslation.getX() - cloud.getRadius() <
+        if(cloud.myTranslation.getX() - cloud.getRadius() <
                 helicopter.myTranslation.getX() &&
-                this.cloud.myTranslation.getY() - cloud.getRadius() <
+                cloud.myTranslation.getY() - cloud.getRadius() <
                         helicopter.myTranslation.getY() &&
-                this.cloud.myTranslation.getX() + cloud.getRadius() >
+                cloud.myTranslation.getX() + cloud.getRadius() >
                         helicopter.myTranslation.getX() +
                                 helicopter.getChopperBodyWidth() &&
-                this.cloud.myTranslation.getY() + cloud.getRadius() >
+                cloud.myTranslation.getY() + cloud.getRadius() >
                         helicopter.myTranslation.getY() +
                                 helicopter.getChopperBodyHeight()
         ){
