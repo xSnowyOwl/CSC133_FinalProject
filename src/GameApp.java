@@ -340,17 +340,29 @@ class Helipad extends Pane{
         helipadRect.setFill(Color.SANDYBROWN);
         helipadRect.setStroke(Color.BLACK);
         helipadRect.setStrokeWidth(2);
-        helipadRect.setTranslateX(Globals.APP_WIDTH / 2 - helipadWidth / 2);
-        helipadRect.setTranslateY(50);
+        //helipadRect.setTranslateX(Globals.APP_WIDTH / 2 - helipadWidth / 2);
+        //helipadRect.setTranslateY(50);
 
         Ellipse helipadCircle = new Ellipse(helipadRadius, helipadRadius);
         helipadCircle.setFill(Color.SADDLEBROWN);
         helipadCircle.setStroke(Color.WHITE);
         helipadCircle.setStrokeWidth(2);
-        helipadCircle.setTranslateX(Globals.APP_WIDTH / 2);
-        helipadCircle.setTranslateY(100);
+        helipadCircle.setTranslateX(helipadRect.getTranslateX() +
+                helipadWidth / 2);
+        helipadCircle.setTranslateY(helipadRect.getTranslateY() +
+                helipadHeight / 2);
 
+        setTranslateX(Globals.APP_WIDTH / 2 - helipadWidth / 2);
+        setTranslateY(50);
         this.getChildren().addAll(helipadRect, helipadCircle);
+    }
+
+    public int getHelipadWidth() {
+        return helipadWidth;
+    }
+
+    public int getHelipadHeight() {
+        return helipadHeight;
     }
 }
 
@@ -394,7 +406,6 @@ class Cloud extends GameObject{
         if(this.cloudSeed < 100){
             this.cloudSeed++;
             this.cloudText.setText(cloudSeed + "%");
-            //System.out.println("Cloud is being seeded.");
         }
     }
     public void decayingCloud(){
@@ -425,12 +436,10 @@ class Pond extends Pane{
     GameText pondText;
     private static double seedTime = 0;
     private static final double pondRadius = 30;
-    private static double pondX;
-    private static double pondY;
     private int pondSeed = random.nextInt(30);
     public Pond() {
-        pondX = randomCoordinateX();
-        pondY = randomCoordinateY();
+        double pondX = randomCoordinateX();
+        double pondY = randomCoordinateY();
         Circle pond = new Circle(pondRadius, Color.DEEPSKYBLUE);
         pond.setTranslateX(pondX);
         pond.setTranslateY(pondY);
@@ -478,46 +487,8 @@ class Pond extends Pane{
                         Math.pow((this.getTranslateX() - xCoord), 2))
                 < pondRadius * 2;
     }
-/*    public void resetPonds(){
-        ponds.subList(1, 3).clear();
-        while(ponds.size() < 3){
-            ponds.add(new Pond());
-        }
-    }*/
     public void update(){
         this.seedPond();
-    }
-}
-class CelsoPondsIdea extends GameObject{
-    int x;
-    int y;
-    Random rand = new Random();
-    public CelsoPondsIdea(){
-        Circle one = new Circle(35);
-        Circle two = new Circle(35);
-        Circle three = new Circle(35);
-
-        x = rand.nextInt(700) + 100;
-        y = rand.nextInt(700 + 100);
-        one.setTranslateY(y);
-        one.setTranslateX(x);
-
-        while(samesame(x,y)){
-            x = rand.nextInt(700) + 100;
-            y = rand.nextInt(700 + 100);
-        }
-        two.setTranslateY(y);
-        two.setTranslateX(x);
-        while(samesame(x,y) || samesame((int)one.getTranslateX(),
-                (int)one.getTranslateY())){
-            x = rand.nextInt(700) + 100;
-            y = rand.nextInt(700 + 100);
-        }
-        three.setTranslateY(y);
-        three.setTranslateX(x);
-    }
-    public boolean samesame(int x, int y){
-        return this.x == x && this.y == y;
     }
 }
 class GameText extends GameObject{
@@ -552,7 +523,7 @@ class DistanceLines extends Pane{
 
 class Game extends Pane{
     Helicopter choppah = new Helicopter();
-    Helipad helipad;
+    Helipad helipad = new Helipad();
     Pane cloudySky = new Pane();
     List<Pond> pondyDesert = new ArrayList<>();
     DistanceLines distanceLine;
@@ -602,13 +573,17 @@ class Game extends Pane{
                         helicopter.myTranslation.getY() +
                                 helicopter.getChopperBodyHeight();
     }
-    public boolean isChopperOnHelipad(){
-        return helipad.getTranslateX() < choppah.myTranslation.getX() &&
-                helipad.getTranslateX() + helipad.getHeight() >
-                        choppah.myTranslation.getY() + choppah.getChopperBodyWidth()
-                && helipad.getTranslateY() < choppah.myTranslation.getY() &&
-                helipad.getTranslateY() + helipad.getHeight() >
-                        choppah.getTranslateY() + choppah.getChopperBodyWidth();
+    public boolean isChopperOnHelipad(Helicopter choppah, Helipad helipad){
+        return helipad.getTranslateX() <
+                choppah.myTranslation.getX() - choppah.getChopperBodyWidth() &&
+                helipad.getTranslateX() + helipad.getHelipadWidth() >
+                        choppah.myTranslation.getX() +
+                                choppah.getChopperBodyWidth() &&
+                helipad.getTranslateY() < choppah.myTranslation.getY() -
+                        choppah.getChopperBodyHeight() &&
+                helipad.getTranslateY() + helipad.getHelipadHeight() >
+                        choppah.myTranslation.getY() +
+                                choppah.getChopperBodyWidth();
     }
     public void seedCloud(){
         for(int i = 0; i < cloudySky.getChildren().size(); i++){
@@ -665,7 +640,8 @@ public class GameApp extends Application {
                 }
                 if(event.getCode() == KeyCode.I){
                     if(rainmaker.choppah.getSpeed() == 0 &&
-                            rainmaker.isChopperOnHelipad()){
+                            rainmaker.isChopperOnHelipad(rainmaker.choppah,
+                                    rainmaker.helipad)){
                         rainmaker.choppah.ignition();
                     }
                 }
@@ -677,9 +653,19 @@ public class GameApp extends Application {
                 }
                 if(event.getCode() == KeyCode.M){
                     //Reserved for testing purposes.
+                    System.out.println("Helipad left side: " + rainmaker.helipad.getTranslateX());
+                    System.out.println("Chopper left side: " + rainmaker.choppah.myTranslation.getX());
+                    System.out.println("Helipad right side: " + (rainmaker.helipad.getTranslateX() + rainmaker.helipad.getWidth()));
+                    System.out.println("Chopper right side: " + (rainmaker.choppah.myTranslation.getX() + rainmaker.choppah.getChopperBodyWidth()));
+                    System.out.println("Helipad bottom: " + rainmaker.helipad.getTranslateY());
+                    System.out.println("Chopper bottom: " + rainmaker.choppah.myTranslation.getY());
+                    System.out.println("Helipad top: " + (rainmaker.helipad.getTranslateY() + rainmaker.helipad.getHeight()));
+                    System.out.println("Chopper top: " + (rainmaker.choppah.myTranslation.getY() + rainmaker.choppah.getChopperBodyHeight()));
+                    System.out.println("Is Chopper on Helipad?: " + rainmaker.isChopperOnHelipad(rainmaker.choppah, rainmaker.helipad));
                 }
                 if(event.getCode() == KeyCode.D){
-                    System.out.println("Distance lines toggled!");
+                    System.out.println("Helipad Width: " + rainmaker.helipad.getWidth());
+                    //System.out.println("Distance lines toggled!");
                 }
             }
         });
@@ -695,12 +681,6 @@ public class GameApp extends Application {
 }
 /*
 * TODO LIST:
-*  -State patterns:
-*    *Helicopter
-*    *Clouds
-*  //Search: Java How to create objects of class without name//
-*  -Multiple Ponds (non-intersecting)
-*  -Multiple Clouds (3 - 5 clouds at all times)
 *  -Calculate distance between clouds and ponds
 *  -Distance lines for clouds and ponds (toggle with 'D') *in progress*
 * */
