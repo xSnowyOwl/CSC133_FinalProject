@@ -441,8 +441,8 @@ class Pond extends Pane{
         double pondX = randomCoordinateX();
         double pondY = randomCoordinateY();
         Circle pond = new Circle(pondRadius, Color.DEEPSKYBLUE);
-        pond.setTranslateX(pondX);
-        pond.setTranslateY(pondY);
+        setTranslateX(pondX);
+        setTranslateY(pondY);
         pondText = new GameText(
                 pond.getTranslateX() - 12, pond.getTranslateY() + 7,
                 Color.BLACK
@@ -506,18 +506,36 @@ class GameText extends GameObject{
 }
 
 class DistanceLines extends Pane{
-    Line distanceLine;
-    public DistanceLines(Cloud cloud, Pond pond) {
-        distanceLine = new Line(cloud.myTranslation.getX(),
-                cloud.myTranslation.getY(), pond.getTranslateX(), pond.getTranslateY());
-        distanceLine.setStroke(Color.BLACK);
-        getChildren().add(distanceLine);
+    Cloud cloud;
+    ArrayList<Pond> ponds;
+    Line distanceLine0;
+    Line distanceLine1;
+    Line distanceLine2;
+    public DistanceLines(Cloud cloud, ArrayList<Pond> ponds) {
+        this.cloud = cloud;
+        this.ponds = ponds;
+        distanceLine0 = new Line(cloud.myTranslation.getX(),
+                cloud.myTranslation.getY(), ponds.get(0).getTranslateX(),
+                ponds.get(0).getTranslateY());
+        distanceLine1 = new Line(cloud.myTranslation.getX(),
+                cloud.myTranslation.getY(), ponds.get(1).getTranslateX(),
+                ponds.get(1).getTranslateY());
+        distanceLine2 = new Line(cloud.myTranslation.getX(),
+                cloud.myTranslation.getY(), ponds.get(2).getTranslateX(),
+                ponds.get(2).getTranslateY());
+        distanceLine0.setStroke(Color.BLACK);
+        distanceLine1.setStroke(Color.BLACK);
+        distanceLine2.setStroke(Color.BLACK);
+        getChildren().addAll(distanceLine0, distanceLine1, distanceLine2);
     }
 
-    public void update(Cloud cloud, Pond pond){
-        this.getChildren().clear();
-        distanceLine = new Line(cloud.myTranslation.getX(),
-                cloud.myTranslation.getY(), pond.getTranslateX(), pond.getTranslateY());
+    public void update(Cloud cloud){
+        distanceLine0.setStartX(cloud.myTranslation.getX());
+        distanceLine0.setStartY(cloud.myTranslation.getY());
+        distanceLine1.setStartX(cloud.myTranslation.getX());
+        distanceLine1.setStartY(cloud.myTranslation.getY());
+        distanceLine2.setStartX(cloud.myTranslation.getX());
+        distanceLine2.setStartY(cloud.myTranslation.getY());
     }
 }
 
@@ -525,13 +543,15 @@ class Game extends Pane{
     Helicopter choppah = new Helicopter();
     Helipad helipad = new Helipad();
     Pane cloudySky = new Pane();
-    List<Pond> pondyDesert = new ArrayList<>();
-    DistanceLines distanceLine;
+    ArrayList<Pond> ponds = new ArrayList<>();
+
+    DistanceLines distanceLines;
     int frameCount = 0;
 
     AnimationTimer game = new AnimationTimer() {
         double oldFrame = -1;
         double elapsedTime = 0;
+
         @Override
         public void handle(long currentFrame) {
             if(oldFrame < 0) oldFrame = currentFrame;
@@ -542,21 +562,25 @@ class Game extends Pane{
             spawnClouds();
             choppah.update();
             updateClouds();
+            distanceLines = new DistanceLines(((Cloud)cloudySky.getChildren().get(0)),
+                    ponds);
+            getChildren().add(distanceLines);
+            distanceLines.update(((Cloud)cloudySky.getChildren().get(0)));
         }
     };
     public Game(){
         super.setScaleY(-1);
     }
     public void init(){
-        pondyDesert.clear();
-        while(pondyDesert.size() < 3){
-            pondyDesert.add(new Pond());
+        ponds.clear();
+        while(ponds.size() < 3){
+            ponds.add(new Pond());
         }
         this.getChildren().clear();
         this.getChildren().addAll(new Helipad(),
-                pondyDesert.get(0),
-                pondyDesert.get(1),
-                pondyDesert.get(2),
+                ponds.get(0),
+                ponds.get(1),
+                ponds.get(2),
                 cloudySky = new Pane(),
                 choppah = new Helicopter());
     }
