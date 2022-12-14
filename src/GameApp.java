@@ -544,14 +544,12 @@ class Game extends Pane{
     Helipad helipad = new Helipad();
     Pane cloudySky = new Pane();
     ArrayList<Pond> ponds = new ArrayList<>();
-
-    DistanceLines distanceLines;
+    ArrayList<DistanceLines> distanceLines = new ArrayList<>();
     int frameCount = 0;
 
     AnimationTimer game = new AnimationTimer() {
         double oldFrame = -1;
         double elapsedTime = 0;
-
         @Override
         public void handle(long currentFrame) {
             if(oldFrame < 0) oldFrame = currentFrame;
@@ -560,12 +558,10 @@ class Game extends Pane{
             elapsedTime += frameTime;
 
             spawnClouds();
+            checkLines();
             choppah.update();
             updateClouds();
-            distanceLines = new DistanceLines(((Cloud)cloudySky.getChildren().get(0)),
-                    ponds);
-            getChildren().add(distanceLines);
-            distanceLines.update(((Cloud)cloudySky.getChildren().get(0)));
+            updateLines();
         }
     };
     public Game(){
@@ -573,16 +569,16 @@ class Game extends Pane{
     }
     public void init(){
         ponds.clear();
-        while(ponds.size() < 3){
-            ponds.add(new Pond());
-        }
+        distanceLines.clear();
+        spawnPonds();
         this.getChildren().clear();
         this.getChildren().addAll(new Helipad(),
                 ponds.get(0),
                 ponds.get(1),
                 ponds.get(2),
-                cloudySky = new Pane(),
-                choppah = new Helicopter());
+                cloudySky = new Pane(new Cloud(),new Cloud(),new Cloud()),
+                choppah = new Helicopter()
+                );
     }
     public boolean isChopperInCloud(Helicopter helicopter,
                                              Cloud cloud){
@@ -609,6 +605,11 @@ class Game extends Pane{
                         choppah.myTranslation.getY() +
                                 choppah.getChopperBodyWidth();
     }
+    public void spawnPonds(){
+        while(ponds.size() < 3){
+            ponds.add(new Pond());
+        }
+    }
     public void seedCloud(){
         for(int i = 0; i < cloudySky.getChildren().size(); i++){
             if(isChopperInCloud(choppah,
@@ -634,6 +635,30 @@ class Game extends Pane{
     public void updateClouds(){
         for(int i = 0; i < cloudySky.getChildren().size(); i++){
             ((Cloud)cloudySky.getChildren().get(i)).update();
+        }
+    }
+    public void assignLines(){
+        for(int i = 0; i < cloudySky.getChildren().size(); i++){
+            distanceLines.add(new DistanceLines(
+                    ((Cloud)cloudySky.getChildren().get(i)), ponds));
+        }
+    }
+    public void updateLines(){
+        for(int i = 0; i < distanceLines.size(); i++){
+            distanceLines.get(i).update(((Cloud)cloudySky.getChildren().get(i)));
+        }
+    }
+    public void checkLines(){
+        if(distanceLines.size() < cloudySky.getChildren().size()){
+            distanceLines.add(new DistanceLines((
+                    (Cloud)cloudySky.getChildren().get(
+                            distanceLines.size())), ponds));
+            getChildren().add(distanceLines.get(distanceLines.size() - 1));
+        }
+    }
+    public void addLines(){
+        for(int i = 0; i < cloudySky.getChildren().size(); i++){
+            getChildren().add(distanceLines.get(i));
         }
     }
 }
