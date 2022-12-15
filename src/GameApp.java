@@ -506,6 +506,8 @@ class DistanceLines extends Pane{
         getChildren().addAll(distanceLine0, distanceLine1, distanceLine2);
     }
     public void visibility(){
+        System.out.println("Visibility boolean modified!");
+        System.out.println(isVisible);
         isVisible = !isVisible;
     }
     public double lineLength(Line line){
@@ -647,9 +649,10 @@ class Game extends Pane{
                     Globals.APP_WIDTH){
                 distanceLines.get(i).getChildren().clear();
                 distanceLines.remove(distanceLines.get(i));
-                cloudySky.getChildren().remove(i);
+                cloudySky.getChildren().remove(cloudySky.getChildren().get(i));
+            }else{
+                ((Cloud)cloudySky.getChildren().get(i)).update();
             }
-            ((Cloud)cloudySky.getChildren().get(i)).update();
         }
     }
     public void updateLines(){
@@ -667,6 +670,7 @@ class Game extends Pane{
     }
     public void toggleLines(){
         for(int i = 0; i < distanceLines.size(); i++){
+            //System.out.println("Toggle lines activated!");
             distanceLines.get(i).visibility();
         }
     }
@@ -722,7 +726,7 @@ public class GameApp extends Application {
                     System.out.println("Is Chopper on Helipad?: " + rainmaker.isChopperOnHelipad(rainmaker.choppah, rainmaker.helipad));
                 }
                 if(event.getCode() == KeyCode.D){
-                    System.out.println("Distance lines toggled!");
+                    //System.out.println("Distance lines pressed!");
                     rainmaker.toggleLines();
                 }
             }
