@@ -444,6 +444,7 @@ class Pond extends Pane{
         if(this.pondSeed < 100){
             this.seedTime++;
             if(this.seedTime % 60 == 0 ){
+                System.out.println("Pond is being seeded!");
                 this.pondSeed++;
             }
         }
@@ -508,7 +509,10 @@ class DistanceLines extends Pane{
     public void visibility(){
         isVisible = !isVisible;
     }
-
+    public double lineLength(Line line){
+        return Math.sqrt(Math.pow((line.getStartY() - line.getEndY()), 2)
+                + Math.pow((line.getStartX() - line.getEndX()), 2));
+    }
     public void update(Cloud cloud){
         distanceLine0.setStartX(cloud.myTranslation.getX());
         distanceLine0.setStartY(cloud.myTranslation.getY());
@@ -542,6 +546,7 @@ class Game extends Pane{
 
             spawnClouds();
             checkLines();
+            seedPonds();
             choppah.update();
             updateClouds();
             updateLines();
@@ -593,8 +598,26 @@ class Game extends Pane{
             ponds.add(new Pond());
         }
     }
-    public void seedPonds(ArrayList<DistanceLines> line, ArrayList<Pond> pond){
-
+    public void seedPonds(){
+        for(int i = 0; i < cloudySky.getChildren().size(); i++){
+            for(int j = 0; j < distanceLines.size(); j++){
+                if(distanceLines.get(j).lineLength(
+                        distanceLines.get(j).distanceLine0) < 100 &&
+                        ((Cloud)cloudySky.getChildren().get(j)).getCloudSeed() > 30){
+                    ponds.get(0).update();
+                }
+                if(distanceLines.get(j).lineLength(
+                        distanceLines.get(j).distanceLine1) < 100 &&
+                        ((Cloud)cloudySky.getChildren().get(j)).getCloudSeed() > 30){
+                    ponds.get(1).seedPond();
+                }
+                if(distanceLines.get(j).lineLength(
+                        distanceLines.get(j).distanceLine2) < 100 &&
+                        ((Cloud)cloudySky.getChildren().get(j)).getCloudSeed() > 30){
+                    ponds.get(2).seedPond();
+                }
+            }
+        }
     }
     public void seedCloud(){
         for(int i = 0; i < cloudySky.getChildren().size(); i++){
