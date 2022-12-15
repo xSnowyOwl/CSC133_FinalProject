@@ -20,10 +20,7 @@ import javafx.scene.transform.Scale;
 import javafx.scene.transform.Translate;
 import javafx.stage.Stage;
 import javafx.scene.shape.Rectangle;
-import javafx.geometry.Point2D;
-
 import java.util.ArrayList;
-import java.util.List;
 import java.util.Random;
 
 import static java.lang.Math.*;
@@ -88,14 +85,11 @@ class Helicopter extends GameObject{
     private final double chopperTailHeight = 28;
     private double accelerationLevel = 0;
     private static double speed;
-    private double velocityX = 0;
-    private double velocityY = 0;
     private boolean isOff;
     private boolean isStarting;
     private boolean isStopping;
     private boolean isReady;
     private int chopperFuel;
-    private static int windUp = 0;
     Bounds chopperBounds;
     GameText heliText = new GameText(-11, -35, Color.LEMONCHIFFON);
     HelicopterBlade blade = new HelicopterBlade();
@@ -267,12 +261,10 @@ class Helicopter extends GameObject{
         }
     }
     public double getVelocityX(){
-        velocityX = speed * -sin(Math.toRadians(getMyRotation()));
-        return velocityX;
+        return speed * -sin(Math.toRadians(getMyRotation()));
     }
     public double getVelocityY(){
-        velocityY = speed * cos(Math.toRadians(getMyRotation()));
-        return velocityY;
+        return speed * cos(Math.toRadians(getMyRotation()));
     }
     public void moveHeli(){
         translate(myTranslation.getX() + getVelocityX(),
@@ -340,19 +332,17 @@ class Helipad extends Pane{
         helipadRect.setFill(Color.SANDYBROWN);
         helipadRect.setStroke(Color.BLACK);
         helipadRect.setStrokeWidth(2);
-        //helipadRect.setTranslateX(Globals.APP_WIDTH / 2 - helipadWidth / 2);
-        //helipadRect.setTranslateY(50);
 
         Ellipse helipadCircle = new Ellipse(helipadRadius, helipadRadius);
         helipadCircle.setFill(Color.SADDLEBROWN);
         helipadCircle.setStroke(Color.WHITE);
         helipadCircle.setStrokeWidth(2);
         helipadCircle.setTranslateX(helipadRect.getTranslateX() +
-                helipadWidth / 2);
+                helipadWidth / 2.0);
         helipadCircle.setTranslateY(helipadRect.getTranslateY() +
-                helipadHeight / 2);
+                helipadHeight / 2.0);
 
-        setTranslateX(Globals.APP_WIDTH / 2 - helipadWidth / 2);
+        setTranslateX(Globals.APP_WIDTH / 2 - helipadWidth / 2.0);
         setTranslateY(50);
         this.getChildren().addAll(helipadRect, helipadCircle);
     }
@@ -372,7 +362,7 @@ class Cloud extends GameObject{
     Bounds cloudBounds;
     GameText cloudText = new GameText(-14, 8, Color.BLACK);
     private static final int cloudRadius = 75;
-    private double cloudVelocity;
+    private final double cloudVelocity;
     private int cloudSeed = 0;
     private int decayTime = 0;
     public Cloud() {
@@ -459,33 +449,16 @@ class Pond extends Pane{
         }
         this.pondText.setText(this.pondSeed + "%");
     }
-    public double getSeedTime(){
-        return seedTime;
-    }
-    public int getPondSeed(){
-        return pondSeed;
-    }
-    public double getPondRadius(){
-        return pondRadius;
-    }
     public double randomNumberGenerator(double min, double max){
         return min + ((max - min) + 1) * random.nextDouble();
     }
     public double randomCoordinateX(){
-        //System.out.println("Random X Coordinate generated!");
         return randomNumberGenerator(0 + pondRadius,
                 Globals.APP_WIDTH - pondRadius);
     }
     public double randomCoordinateY(){
-        //System.out.println("Random Y Coordinate generated!");
         return randomNumberGenerator(Globals.ONE_THIRD_APP_HEIGHT - pondRadius,
                 Globals.APP_HEIGHT - pondRadius);
-    }
-    public boolean isPondColliding(double xCoord, double yCoord){
-        return Math.sqrt(
-                Math.pow((this.getTranslateY() - yCoord), 2) +
-                        Math.pow((this.getTranslateX() - xCoord), 2))
-                < pondRadius * 2;
     }
     public void update(){
         this.seedPond();
@@ -511,6 +484,7 @@ class DistanceLines extends Pane{
     Line distanceLine0;
     Line distanceLine1;
     Line distanceLine2;
+    static boolean isVisible = false;
     public DistanceLines(Cloud cloud, ArrayList<Pond> ponds) {
         this.cloud = cloud;
         this.ponds = ponds;
@@ -526,7 +500,13 @@ class DistanceLines extends Pane{
         distanceLine0.setStroke(Color.BLACK);
         distanceLine1.setStroke(Color.BLACK);
         distanceLine2.setStroke(Color.BLACK);
+        distanceLine0.setVisible(isVisible);
+        distanceLine1.setVisible(isVisible);
+        distanceLine2.setVisible(isVisible);
         getChildren().addAll(distanceLine0, distanceLine1, distanceLine2);
+    }
+    public void visibility(){
+        isVisible = !isVisible;
     }
 
     public void update(Cloud cloud){
@@ -536,6 +516,9 @@ class DistanceLines extends Pane{
         distanceLine1.setStartY(cloud.myTranslation.getY());
         distanceLine2.setStartX(cloud.myTranslation.getX());
         distanceLine2.setStartY(cloud.myTranslation.getY());
+        distanceLine0.setVisible(isVisible);
+        distanceLine1.setVisible(isVisible);
+        distanceLine2.setVisible(isVisible);
     }
 }
 
@@ -610,6 +593,9 @@ class Game extends Pane{
             ponds.add(new Pond());
         }
     }
+    public void seedPonds(ArrayList<DistanceLines> line, ArrayList<Pond> pond){
+
+    }
     public void seedCloud(){
         for(int i = 0; i < cloudySky.getChildren().size(); i++){
             if(isChopperInCloud(choppah,
@@ -637,12 +623,6 @@ class Game extends Pane{
             ((Cloud)cloudySky.getChildren().get(i)).update();
         }
     }
-    public void assignLines(){
-        for(int i = 0; i < cloudySky.getChildren().size(); i++){
-            distanceLines.add(new DistanceLines(
-                    ((Cloud)cloudySky.getChildren().get(i)), ponds));
-        }
-    }
     public void updateLines(){
         for(int i = 0; i < distanceLines.size(); i++){
             distanceLines.get(i).update(((Cloud)cloudySky.getChildren().get(i)));
@@ -656,9 +636,9 @@ class Game extends Pane{
             getChildren().add(distanceLines.get(distanceLines.size() - 1));
         }
     }
-    public void addLines(){
-        for(int i = 0; i < cloudySky.getChildren().size(); i++){
-            getChildren().add(distanceLines.get(i));
+    public void toggleLines(){
+        for(int i = 0; i < distanceLines.size(); i++){
+            distanceLines.get(i).visibility();
         }
     }
 }
@@ -713,8 +693,8 @@ public class GameApp extends Application {
                     System.out.println("Is Chopper on Helipad?: " + rainmaker.isChopperOnHelipad(rainmaker.choppah, rainmaker.helipad));
                 }
                 if(event.getCode() == KeyCode.D){
-                    System.out.println("Helipad Width: " + rainmaker.helipad.getWidth());
-                    //System.out.println("Distance lines toggled!");
+                    System.out.println("Distance lines toggled!");
+                    rainmaker.toggleLines();
                 }
             }
         });
