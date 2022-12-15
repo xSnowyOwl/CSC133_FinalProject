@@ -371,8 +371,7 @@ class Cloud extends GameObject{
         cloud.setFill(Color.WHITE);
         cloud.setRadius(cloudRadius);
         cloud.setOpacity(.75);
-        translate(randomNumberGenerator(cloudRadius,
-                Globals.APP_WIDTH - cloudRadius), randomNumberGenerator(
+        translate(0 - cloudRadius, randomNumberGenerator(
                         Globals.ONE_THIRD_APP_HEIGHT + cloudRadius
                 ,Globals.APP_HEIGHT - cloudRadius));
         cloudText.setTranslateX(cloud.getTranslateX());
@@ -643,6 +642,13 @@ class Game extends Pane{
     }
     public void updateClouds(){
         for(int i = 0; i < cloudySky.getChildren().size(); i++){
+            if(((Cloud)cloudySky.getChildren().get(i)).myTranslation.getX() -
+                    ((Cloud)cloudySky.getChildren().get(i)).getRadius() >
+                    Globals.APP_WIDTH){
+                distanceLines.get(i).getChildren().clear();
+                distanceLines.remove(distanceLines.get(i));
+                cloudySky.getChildren().remove(i);
+            }
             ((Cloud)cloudySky.getChildren().get(i)).update();
         }
     }
