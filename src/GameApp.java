@@ -362,16 +362,16 @@ class Cloud extends GameObject{
     Bounds cloudBounds;
     GameText cloudText = new GameText(-14, 8, Color.BLACK);
     private static final int cloudRadius = 75;
-    private final double cloudVelocity;
+    private final double windSpeed;
     private int cloudSeed = 0;
     private int decayTime = 0;
     public Cloud() {
-        cloudVelocity = randomNumberGenerator(0.1, 1);
+        windSpeed = randomNumberGenerator(0.3, 0.6);
         cloud = new Circle();
         cloud.setFill(Color.WHITE);
         cloud.setRadius(cloudRadius);
         cloud.setOpacity(.75);
-        translate(0 - cloudRadius, randomNumberGenerator(
+        translate(-cloudRadius, randomNumberGenerator(
                         Globals.ONE_THIRD_APP_HEIGHT + cloudRadius
                 ,Globals.APP_HEIGHT - cloudRadius));
         cloudText.setTranslateX(cloud.getTranslateX());
@@ -382,7 +382,7 @@ class Cloud extends GameObject{
         getChildren().addAll(cloud, cloudText);
     }
     public void moveCloud(){
-        translate(this.myTranslation.getX() + cloudVelocity,
+        translate(this.myTranslation.getX() + windSpeed,
                 this.myTranslation.getY());
     }
     public int getRadius(){
@@ -420,7 +420,7 @@ class Cloud extends GameObject{
     }
 }
 
-class Pond extends Pane{
+class Pond extends GameObject{
     Random random = new Random();
     GameText pondText;
     private static double seedTime = 0;
@@ -459,6 +459,9 @@ class Pond extends Pane{
     public double randomCoordinateY(){
         return randomNumberGenerator(Globals.ONE_THIRD_APP_HEIGHT - pondRadius,
                 Globals.APP_HEIGHT - pondRadius);
+    }
+    public void fillPond(){
+        this.scale(1 + pondSeed * 0.01, 1 + pondSeed * 0.01);
     }
     public void update(){
         this.seedPond();
@@ -510,20 +513,39 @@ class DistanceLines extends Pane{
         System.out.println(isVisible);
         isVisible = !isVisible;
     }
-    public double lineLength(Line line){
-        return Math.sqrt(Math.pow((line.getStartY() - line.getEndY()), 2)
-                + Math.pow((line.getStartX() - line.getEndX()), 2));
+    public void checkVisibility(){
+        if(lineLength(this.distanceLine0) > 100){
+            this.distanceLine0.setVisible(false);
+        }else{
+            this.distanceLine0.setVisible(isVisible);
+        }
+        if(lineLength(this.distanceLine1) > 100){
+            this.distanceLine1.setVisible(false);
+        }else{
+            this.distanceLine1.setVisible(isVisible);
+        }
+        if(lineLength(this.distanceLine2) > 100){
+            this.distanceLine2.setVisible(false);
+        }else{
+            this.distanceLine2.setVisible(isVisible);
+        }
     }
-    public void update(Cloud cloud){
+    public void moveLines(){
         distanceLine0.setStartX(cloud.myTranslation.getX());
         distanceLine0.setStartY(cloud.myTranslation.getY());
         distanceLine1.setStartX(cloud.myTranslation.getX());
         distanceLine1.setStartY(cloud.myTranslation.getY());
         distanceLine2.setStartX(cloud.myTranslation.getX());
         distanceLine2.setStartY(cloud.myTranslation.getY());
-        distanceLine0.setVisible(isVisible);
-        distanceLine1.setVisible(isVisible);
-        distanceLine2.setVisible(isVisible);
+    }
+
+    public double lineLength(Line line){
+        return Math.sqrt(Math.pow((line.getStartY() - line.getEndY()), 2)
+                + Math.pow((line.getStartX() - line.getEndX()), 2));
+    }
+    public void update(Cloud cloud){
+        moveLines();
+        checkVisibility();
     }
 }
 
@@ -546,8 +568,10 @@ class Game extends Pane{
             elapsedTime += frameTime;
 
             spawnClouds();
-            checkLines();
+            respawnLines();
+            //checkLines();
             seedPonds();
+            fillPonds();
             choppah.update();
             updateClouds();
             updateLines();
@@ -603,21 +627,35 @@ class Game extends Pane{
         for(int i = 0; i < cloudySky.getChildren().size(); i++){
             for(int j = 0; j < distanceLines.size(); j++){
                 if(distanceLines.get(j).lineLength(
-                        distanceLines.get(j).distanceLine0) < 100 &&
+                        distanceLines.get(j).distanceLine0) < 240 &&
                         ((Cloud)cloudySky.getChildren().get(j)).getCloudSeed() > 30){
                     ponds.get(0).update();
+                }else{
+                    distanceLines.get(j).distanceLine2.setVisible(
+                            !distanceLines.get(j).distanceLine0.isVisible());
                 }
                 if(distanceLines.get(j).lineLength(
-                        distanceLines.get(j).distanceLine1) < 100 &&
+                        distanceLines.get(j).distanceLine1) < 240 &&
                         ((Cloud)cloudySky.getChildren().get(j)).getCloudSeed() > 30){
-                    ponds.get(1).seedPond();
+                    ponds.get(1).update();
+                }else{
+                    distanceLines.get(j).distanceLine2.setVisible(
+                            !distanceLines.get(j).distanceLine1.isVisible());
                 }
                 if(distanceLines.get(j).lineLength(
-                        distanceLines.get(j).distanceLine2) < 100 &&
+                        distanceLines.get(j).distanceLine2) < 240 &&
                         ((Cloud)cloudySky.getChildren().get(j)).getCloudSeed() > 30){
-                    ponds.get(2).seedPond();
+                    ponds.get(2).update();
+                }else{
+                    distanceLines.get(j).distanceLine2.setVisible(
+                            !distanceLines.get(j).distanceLine2.isVisible());
                 }
             }
+        }
+    }
+    public void fillPonds(){
+        for(int i = 0; i < ponds.size(); i++){
+            ponds.get(i).fillPond();
         }
     }
     public void seedCloud(){
@@ -635,7 +673,7 @@ class Game extends Pane{
         }
         else if(cloudySky.getChildren().size() < 5){
             frameCount++;
-            if(frameCount % 120 == 0){
+            if(frameCount % 180 == 0){
                 if(Math.random() < 0.5){
                     cloudySky.getChildren().add(new Cloud());
                 }
@@ -660,7 +698,7 @@ class Game extends Pane{
             distanceLines.get(i).update(((Cloud)cloudySky.getChildren().get(i)));
         }
     }
-    public void checkLines(){
+    public void respawnLines(){
         if(distanceLines.size() < cloudySky.getChildren().size()){
             distanceLines.add(new DistanceLines((
                     (Cloud)cloudySky.getChildren().get(
@@ -670,7 +708,6 @@ class Game extends Pane{
     }
     public void toggleLines(){
         for(int i = 0; i < distanceLines.size(); i++){
-            //System.out.println("Toggle lines activated!");
             distanceLines.get(i).visibility();
         }
     }
@@ -743,6 +780,9 @@ public class GameApp extends Application {
 }
 /*
 * TODO LIST:
-*  -Calculate distance between clouds and ponds
-*  -Distance lines for clouds and ponds (toggle with 'D') *in progress*
-* */
+*   -Turn lines on when within range and off when outside.
+*   -Win/Lose condition and screen
+*   -Image Background and Helipad
+*   -Seed pond relative to cloud range
+*   -State design via classes?
+*/
