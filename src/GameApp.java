@@ -1,13 +1,13 @@
 import javafx.animation.AnimationTimer;
 import javafx.application.Application;
-import javafx.event.EventHandler;
 import javafx.geometry.BoundingBox;
 import javafx.geometry.Bounds;
 import javafx.scene.Group;
 import javafx.scene.Node;
 import javafx.scene.Scene;
+import javafx.scene.control.Alert;
+import javafx.scene.control.ButtonType;
 import javafx.scene.input.KeyCode;
-import javafx.scene.input.KeyEvent;
 import javafx.scene.layout.Pane;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.Circle;
@@ -20,9 +20,9 @@ import javafx.scene.transform.Scale;
 import javafx.scene.transform.Translate;
 import javafx.stage.Stage;
 import javafx.scene.shape.Rectangle;
+
 import java.util.ArrayList;
 import java.util.Random;
-
 import static java.lang.Math.*;
 
 interface Updatable{
@@ -98,7 +98,7 @@ class Helicopter extends GameObject{
         isStarting = false;
         isStopping = true;
         isReady = false;
-        chopperFuel = 25000;
+        chopperFuel = 100;
         heliText.setText("F: " + chopperFuel);
         chopperBounds = new BoundingBox(
                 myTranslation.getX(), myTranslation.getY(), chopperBodyWidth,
@@ -197,6 +197,9 @@ class Helicopter extends GameObject{
     }
     public double getChopperBodyHeight(){
         return chopperBodyHeight;
+    }
+    public int getFuel(){
+        return chopperFuel;
     }
     public void accelerate(){
         if(isReady){
@@ -439,12 +442,12 @@ class Pond extends GameObject{
         pondText.setText(pondSeed + "%");
         getChildren().addAll(pond, pondText);
     }
-    public void seedPond(double length){
+    public void seedPond(){
         if(this.pondSeed < 100){
             this.seedTime++;
             if(this.seedTime % 60 == 0 ){
                 System.out.println("Pond is being seeded!");
-                this.pondSeed = (int) (this.pondSeed + 1 / (length + 1));
+                this.pondSeed++;
             }
         }
         this.pondText.setText(this.pondSeed + "%");
@@ -463,8 +466,8 @@ class Pond extends GameObject{
     public void fillPond(){
         this.scale(1 + pondSeed * 0.01, 1 + pondSeed * 0.01);
     }
-    public void update(double length){
-        this.seedPond(length);
+    public void update(){
+        this.seedPond();
     }
 }
 class GameText extends GameObject{
@@ -549,6 +552,35 @@ class DistanceLines extends Pane{
     }
 }
 
+class GameOver {
+    GameApp gameApp;
+    Alert gameOver = new Alert(
+            Alert.AlertType.CONFIRMATION,
+            "Hello World",
+            ButtonType.YES,
+            ButtonType.NO);
+    public GameOver(GameApp x){
+        gameApp = x;
+    }
+    public void popUp(){
+        gameOver.setOnHidden(event -> {
+            if(gameOver.getResult() == ButtonType.YES){
+                gameApp.rainmaker.init();
+                gameOver.close();
+            }else{
+                System.exit(0);
+            }
+        });
+    }
+    public void winLoseConditions(){
+        if(gameApp.rainmaker.choppah.getFuel() <= 0){
+            System.out.println("HERO");
+            gameOver.show();
+            popUp();
+        }
+    }
+}
+
 class Game extends Pane{
     Helicopter choppah = new Helicopter();
     Helipad helipad = new Helipad();
@@ -556,29 +588,32 @@ class Game extends Pane{
     ArrayList<Pond> ponds = new ArrayList<>();
     ArrayList<DistanceLines> distanceLines = new ArrayList<>();
     int frameCount = 0;
+    GameOver pop;
 
     AnimationTimer game = new AnimationTimer() {
         double oldFrame = -1;
         double elapsedTime = 0;
+
         @Override
         public void handle(long currentFrame) {
             if(oldFrame < 0) oldFrame = currentFrame;
             double frameTime = (currentFrame - oldFrame) / 1e9;
             oldFrame = currentFrame;
             elapsedTime += frameTime;
-
             spawnClouds();
             respawnLines();
-            //checkLines();
+
             seedPonds();
             fillPonds();
             choppah.update();
             updateClouds();
             updateLines();
+            pop.winLoseConditions();
         }
     };
-    public Game(){
+    public Game(GameOver pop){
         super.setScaleY(-1);
+        this.pop = pop;
     }
     public void init(){
         ponds.clear();
@@ -589,7 +624,7 @@ class Game extends Pane{
                 ponds.get(0),
                 ponds.get(1),
                 ponds.get(2),
-                cloudySky = new Pane(new Cloud(),new Cloud(),new Cloud()),
+                cloudySky = new Pane(new Cloud()),
                 choppah = new Helicopter()
                 );
     }
@@ -629,24 +664,24 @@ class Game extends Pane{
                 if(distanceLines.get(j).lineLength(
                         distanceLines.get(j).distanceLine0) < 240 &&
                         ((Cloud)cloudySky.getChildren().get(j)).getCloudSeed() > 30){
-                    ponds.get(0).update(distanceLines.get(j).lineLength(distanceLines.get(j).distanceLine0));
+                    ponds.get(0).update();
                 }
                 if(distanceLines.get(j).lineLength(
                         distanceLines.get(j).distanceLine1) < 240 &&
                         ((Cloud)cloudySky.getChildren().get(j)).getCloudSeed() > 30){
-                    ponds.get(1).update(distanceLines.get(j).lineLength(distanceLines.get(j).distanceLine1));
+                    ponds.get(1).update();
                 }
                 if(distanceLines.get(j).lineLength(
                         distanceLines.get(j).distanceLine2) < 240 &&
                         ((Cloud)cloudySky.getChildren().get(j)).getCloudSeed() > 30){
-                    ponds.get(2).update(distanceLines.get(j).lineLength(distanceLines.get(j).distanceLine2));
+                    ponds.get(2).update();
                 }
             }
         }
     }
     public void fillPonds(){
-        for(int i = 0; i < ponds.size(); i++){
-            ponds.get(i).fillPond();
+        for (Pond pond : ponds) {
+            pond.fillPond();
         }
     }
     public void seedCloud(){
@@ -698,82 +733,85 @@ class Game extends Pane{
         }
     }
     public void toggleLines(){
-        for(int i = 0; i < distanceLines.size(); i++){
-            distanceLines.get(i).visibility();
+        for (DistanceLines distanceLine : distanceLines) {
+            distanceLine.visibility();
         }
     }
+
 }
 
 public class GameApp extends Application {
-    Game rainmaker = new Game();
+    GameOver pop = new GameOver(this);
+    Game rainmaker = new Game(pop);
     @Override
-    public void start(Stage primaryStage) throws Exception {
+    public void start(Stage primaryStage){
         rainmaker.init();
         Scene scene = new Scene(rainmaker, Globals.APP_WIDTH,
                 Globals.APP_HEIGHT, Color.SANDYBROWN);
-        scene.setOnKeyPressed(new EventHandler<KeyEvent>() {
-            @Override
-            public void handle(KeyEvent event) {
-                if(event.getCode() == KeyCode.UP) {
-                    rainmaker.choppah.accelerate();
-                    System.out.println("Speed: " + rainmaker.choppah.getSpeed());
-                }
-                if(event.getCode() == KeyCode.DOWN){
-                    rainmaker.choppah.decelerate();
-                    System.out.println("Speed: " + rainmaker.choppah.getSpeed());
-                }
-                if(event.getCode() == KeyCode.LEFT){
-                    rainmaker.choppah.counterClockwiseTurn();
-                }
-                if(event.getCode() == KeyCode.RIGHT){
-                    rainmaker.choppah.clockwiseTurn();
-                }
-                if(event.getCode() == KeyCode.I){
-                    if(rainmaker.choppah.getSpeed() == 0 &&
-                            rainmaker.isChopperOnHelipad(rainmaker.choppah,
-                                    rainmaker.helipad)){
-                        rainmaker.choppah.ignition();
-                    }
-                }
-                if(event.getCode() == KeyCode.R){
-                    rainmaker.init();
-                }
-                if(event.getCode() == KeyCode.SPACE){
-                    rainmaker.seedCloud();
-                }
-                if(event.getCode() == KeyCode.M){
-                    //Reserved for testing purposes.
-                    System.out.println("Helipad left side: " + rainmaker.helipad.getTranslateX());
-                    System.out.println("Chopper left side: " + rainmaker.choppah.myTranslation.getX());
-                    System.out.println("Helipad right side: " + (rainmaker.helipad.getTranslateX() + rainmaker.helipad.getWidth()));
-                    System.out.println("Chopper right side: " + (rainmaker.choppah.myTranslation.getX() + rainmaker.choppah.getChopperBodyWidth()));
-                    System.out.println("Helipad bottom: " + rainmaker.helipad.getTranslateY());
-                    System.out.println("Chopper bottom: " + rainmaker.choppah.myTranslation.getY());
-                    System.out.println("Helipad top: " + (rainmaker.helipad.getTranslateY() + rainmaker.helipad.getHeight()));
-                    System.out.println("Chopper top: " + (rainmaker.choppah.myTranslation.getY() + rainmaker.choppah.getChopperBodyHeight()));
-                    System.out.println("Is Chopper on Helipad?: " + rainmaker.isChopperOnHelipad(rainmaker.choppah, rainmaker.helipad));
-                }
-                if(event.getCode() == KeyCode.D){
-                    //System.out.println("Distance lines pressed!");
-                    rainmaker.toggleLines();
+        scene.setOnKeyPressed(event -> {
+            if(event.getCode() == KeyCode.UP) {
+                rainmaker.choppah.accelerate();
+                System.out.println("Speed: " + rainmaker.choppah.getSpeed());
+            }
+            if(event.getCode() == KeyCode.DOWN){
+                rainmaker.choppah.decelerate();
+                System.out.println("Speed: " + rainmaker.choppah.getSpeed());
+            }
+            if(event.getCode() == KeyCode.LEFT){
+                rainmaker.choppah.counterClockwiseTurn();
+            }
+            if(event.getCode() == KeyCode.RIGHT){
+                rainmaker.choppah.clockwiseTurn();
+            }
+            if(event.getCode() == KeyCode.I){
+                if(rainmaker.choppah.getSpeed() == 0 &&
+                        rainmaker.isChopperOnHelipad(rainmaker.choppah,
+                                rainmaker.helipad)){
+                    rainmaker.choppah.ignition();
                 }
             }
+            if(event.getCode() == KeyCode.R){
+                rainmaker.init();
+            }
+            if(event.getCode() == KeyCode.SPACE){
+                rainmaker.seedCloud();
+            }
+            if(event.getCode() == KeyCode.M){
+                //Reserved for testing purposes.
+                System.out.println("Hello World.");
+            }
+            if(event.getCode() == KeyCode.D){
+                //System.out.println("Distance lines pressed!");
+                rainmaker.toggleLines();
+            }
         });
+
         rainmaker.game.start();
         primaryStage.setScene(scene);
         primaryStage.setResizable(false);
         primaryStage.setTitle("Rainmaker");
         primaryStage.show();
     }
+/*    public void init(Game game){
+        game.ponds.clear();
+        game.distanceLines.clear();
+        game.spawnPonds();
+        game.getChildren().clear();
+        game.getChildren().addAll(new Helipad(),
+                game.ponds.get(0),
+                game.ponds.get(1),
+                game.ponds.get(2),
+                game.cloudySky = new Pane(new Cloud()),
+                game.choppah = new Helicopter()
+        );
+    }*/
     public static void main(String[] args){
         Application.launch(args);
     }
 }
 /*
 * TODO LIST:
-*   -Turn lines on when within range and off when outside.
 *   -Win/Lose condition and screen
 *   -Image Background and Helipad
-*   -Seed pond relative to cloud range
 *   -State design via classes?
 */
