@@ -98,7 +98,7 @@ class Helicopter extends GameObject{
         isStarting = false;
         isStopping = true;
         isReady = false;
-        chopperFuel = 100;
+        chopperFuel = 25000;
         heliText.setText("F: " + chopperFuel);
         chopperBounds = new BoundingBox(
                 myTranslation.getX(), myTranslation.getY(), chopperBodyWidth,
@@ -452,6 +452,9 @@ class Pond extends GameObject{
         }
         this.pondText.setText(this.pondSeed + "%");
     }
+    public int getPondSeed(){
+        return pondSeed;
+    }
     public double randomNumberGenerator(double min, double max){
         return min + ((max - min) + 1) * random.nextDouble();
     }
@@ -562,7 +565,20 @@ class GameOver {
     public GameOver(GameApp x){
         gameApp = x;
     }
-    public void popUp(){
+
+    public void popUpLose(){
+        gameOver.setOnHidden(event -> {
+            if(gameOver.getResult() == ButtonType.YES){
+                gameApp.rainmaker.init();
+                gameOver.close();
+            }else{
+                System.exit(0);
+            }
+        });
+    }
+    public void popUpWin(){
+        gameOver.setContentText(
+                "You win! Your Score: " + gameApp.rainmaker.choppah.getFuel());
         gameOver.setOnHidden(event -> {
             if(gameOver.getResult() == ButtonType.YES){
                 gameApp.rainmaker.init();
@@ -574,9 +590,12 @@ class GameOver {
     }
     public void winLoseConditions(){
         if(gameApp.rainmaker.choppah.getFuel() <= 0){
-            System.out.println("HERO");
             gameOver.show();
-            popUp();
+            popUpLose();
+        }
+        if(gameApp.rainmaker.totalPondSeed() >= 240){
+            gameOver.show();
+            popUpWin();
         }
     }
 }
@@ -588,7 +607,7 @@ class Game extends Pane{
     ArrayList<Pond> ponds = new ArrayList<>();
     ArrayList<DistanceLines> distanceLines = new ArrayList<>();
     int frameCount = 0;
-    GameOver pop;
+    GameOver gameOver;
 
     AnimationTimer game = new AnimationTimer() {
         double oldFrame = -1;
@@ -605,15 +624,16 @@ class Game extends Pane{
 
             seedPonds();
             fillPonds();
+            //totalPondSeed();
             choppah.update();
             updateClouds();
             updateLines();
-            pop.winLoseConditions();
+            gameOver.winLoseConditions();
         }
     };
-    public Game(GameOver pop){
+    public Game(GameOver gameOver){
         super.setScaleY(-1);
-        this.pop = pop;
+        this.gameOver = gameOver;
     }
     public void init(){
         ponds.clear();
@@ -678,6 +698,13 @@ class Game extends Pane{
                 }
             }
         }
+    }
+    public int totalPondSeed(){
+        int totalSeed = 0;
+        for(Pond pond : ponds){
+            totalSeed = totalSeed + pond.getPondSeed();
+        }
+        return totalSeed;
     }
     public void fillPonds(){
         for (Pond pond : ponds) {
