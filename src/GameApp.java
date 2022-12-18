@@ -201,6 +201,9 @@ class Helicopter extends GameObject{
     public int getFuel(){
         return chopperFuel;
     }
+    public boolean getIsOff(){
+        return isOff;
+    }
     public void accelerate(){
         if(isReady){
             if(speed < 10){
@@ -236,14 +239,14 @@ class Helicopter extends GameObject{
     }
     public void bladeStatus(){
         if(blade.getRotationSpeed() >= 20){
-            isReady = !isReady;
-        } else{
-            isReady = !isReady;
+            isReady = true;
+        }else if(blade.getRotationSpeed() < 20){
+            isReady = false;
         }
         if(blade.getRotationSpeed() > 0){
-            isOff = !isOff;
-        } else{
-            isOff = !isOff;
+            isOff = false;
+        }else if(blade.getRotationSpeed() <= 0){
+            isOff = true;
         }
     }
     public double getSpeed(){
@@ -369,7 +372,7 @@ class Cloud extends GameObject{
     private int cloudSeed = 0;
     private int decayTime = 0;
     public Cloud() {
-        windSpeed = randomNumberGenerator(0.3, 0.6);
+        windSpeed = randomNumberGenerator(0.3, 0.5);
         cloud = new Circle();
         cloud.setFill(Color.WHITE);
         cloud.setRadius(cloudRadius);
@@ -578,7 +581,7 @@ class GameOver {
     }
     public void popUpWin(){
         gameOver.setContentText(
-                "You win! Your Score: " + gameApp.rainmaker.choppah.getFuel());
+                "You win! Your Score: " + gameApp.rainmaker.choppah.getFuel() + ". Replay? ");
         gameOver.setOnHidden(event -> {
             if(gameOver.getResult() == ButtonType.YES){
                 gameApp.rainmaker.init();
@@ -589,11 +592,13 @@ class GameOver {
         });
     }
     public void winLoseConditions(){
+        gameOver.setContentText("You lose! Try again?");
         if(gameApp.rainmaker.choppah.getFuel() <= 0){
             gameOver.show();
             popUpLose();
         }
-        if(gameApp.rainmaker.totalPondSeed() >= 240){
+        if(gameApp.rainmaker.totalPondSeed() >= 240 &&
+                gameApp.rainmaker.choppah.getIsOff()){
             gameOver.show();
             popUpWin();
         }
@@ -619,12 +624,11 @@ class Game extends Pane{
             double frameTime = (currentFrame - oldFrame) / 1e9;
             oldFrame = currentFrame;
             elapsedTime += frameTime;
+
             spawnClouds();
             respawnLines();
-
             seedPonds();
             fillPonds();
-            //totalPondSeed();
             choppah.update();
             updateClouds();
             updateLines();
@@ -778,11 +782,9 @@ public class GameApp extends Application {
         scene.setOnKeyPressed(event -> {
             if(event.getCode() == KeyCode.UP) {
                 rainmaker.choppah.accelerate();
-                System.out.println("Speed: " + rainmaker.choppah.getSpeed());
             }
             if(event.getCode() == KeyCode.DOWN){
                 rainmaker.choppah.decelerate();
-                System.out.println("Speed: " + rainmaker.choppah.getSpeed());
             }
             if(event.getCode() == KeyCode.LEFT){
                 rainmaker.choppah.counterClockwiseTurn();
@@ -805,10 +807,8 @@ public class GameApp extends Application {
             }
             if(event.getCode() == KeyCode.M){
                 //Reserved for testing purposes.
-                System.out.println("Hello World.");
             }
             if(event.getCode() == KeyCode.D){
-                //System.out.println("Distance lines pressed!");
                 rainmaker.toggleLines();
             }
         });
@@ -819,26 +819,13 @@ public class GameApp extends Application {
         primaryStage.setTitle("Rainmaker");
         primaryStage.show();
     }
-/*    public void init(Game game){
-        game.ponds.clear();
-        game.distanceLines.clear();
-        game.spawnPonds();
-        game.getChildren().clear();
-        game.getChildren().addAll(new Helipad(),
-                game.ponds.get(0),
-                game.ponds.get(1),
-                game.ponds.get(2),
-                game.cloudySky = new Pane(new Cloud()),
-                game.choppah = new Helicopter()
-        );
-    }*/
     public static void main(String[] args){
         Application.launch(args);
     }
 }
 /*
 * TODO LIST:
-*   -Win/Lose condition and screen
+*   -Pond Collision
 *   -Image Background and Helipad
 *   -State design via classes?
 */
