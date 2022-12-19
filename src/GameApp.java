@@ -2,16 +2,18 @@ import javafx.animation.AnimationTimer;
 import javafx.application.Application;
 import javafx.geometry.BoundingBox;
 import javafx.geometry.Bounds;
+import javafx.geometry.Point2D;
 import javafx.scene.Group;
 import javafx.scene.Node;
 import javafx.scene.Scene;
 import javafx.scene.control.Alert;
 import javafx.scene.control.ButtonType;
+import javafx.scene.image.Image;
+import javafx.scene.image.ImageView;
 import javafx.scene.input.KeyCode;
 import javafx.scene.layout.Pane;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.Circle;
-import javafx.scene.shape.Ellipse;
 import javafx.scene.shape.Line;
 import javafx.scene.text.Font;
 import javafx.scene.text.Text;
@@ -20,7 +22,6 @@ import javafx.scene.transform.Scale;
 import javafx.scene.transform.Translate;
 import javafx.stage.Stage;
 import javafx.scene.shape.Rectangle;
-
 import java.util.ArrayList;
 import java.util.Random;
 import static java.lang.Math.*;
@@ -72,9 +73,10 @@ abstract class GameObject extends Group implements Updatable{
     }
 }
 
+//A class of global constants for the game.
 class Globals{
-    final static double APP_WIDTH = 800;
-    final static double APP_HEIGHT = 800;
+    final static double APP_WIDTH = 1000;
+    final static double APP_HEIGHT = 1000;
     final static double ONE_THIRD_APP_HEIGHT = APP_HEIGHT / 3;
 }
 
@@ -234,8 +236,6 @@ class Helicopter extends GameObject{
     public void ignition(){
         isStarting = !isStarting;
         isStopping = !isStopping;
-        System.out.println("Starting Status: " + isStarting);
-        System.out.println("Stopping Status: " + isStopping);
     }
     public void bladeStatus(){
         if(blade.getRotationSpeed() >= 20){
@@ -332,25 +332,18 @@ class HelicopterBlade extends GameObject{
 class Helipad extends Pane{
     private static final int helipadWidth = 100;
     private static final int helipadHeight = 100;
-    private static final int helipadRadius = 45;
-    public Helipad(){
-        Rectangle helipadRect = new Rectangle(helipadWidth, helipadHeight);
-        helipadRect.setFill(Color.SANDYBROWN);
-        helipadRect.setStroke(Color.BLACK);
-        helipadRect.setStrokeWidth(2);
-
-        Ellipse helipadCircle = new Ellipse(helipadRadius, helipadRadius);
-        helipadCircle.setFill(Color.SADDLEBROWN);
-        helipadCircle.setStroke(Color.WHITE);
-        helipadCircle.setStrokeWidth(2);
-        helipadCircle.setTranslateX(helipadRect.getTranslateX() +
-                helipadWidth / 2.0);
-        helipadCircle.setTranslateY(helipadRect.getTranslateY() +
-                helipadHeight / 2.0);
+    public Helipad(Game game){
+        Image helipadImage = new Image("helipad.jpg");
+        ImageView helipad = new ImageView(helipadImage);
+        helipad.setFitHeight(100);
+        helipad.setFitWidth(100);
+        helipad.setTranslateX(Globals.APP_WIDTH / 2 - helipadWidth / 2.0);
+        helipad.setTranslateY(60);
 
         setTranslateX(Globals.APP_WIDTH / 2 - helipadWidth / 2.0);
         setTranslateY(50);
-        this.getChildren().addAll(helipadRect, helipadCircle);
+
+        game.getChildren().add(helipad);
     }
 
     public int getHelipadWidth() {
@@ -384,7 +377,9 @@ class Cloud extends GameObject{
         cloudText.setTranslateY(cloud.getTranslateY());
         cloudText.setText(cloudSeed + "%");
         cloudBounds = new BoundingBox(this.getTranslateX(),
-                this.getTranslateY(), cloudRadius * 2, cloudRadius * 2);
+                this.getTranslateY(),
+                cloudRadius * 2,
+                cloudRadius * 2);
         getChildren().addAll(cloud, cloudText);
     }
     public void moveCloud(){
@@ -432,9 +427,29 @@ class Pond extends GameObject{
     private double seedTime = 0;
     private static final double pondRadius = 30;
     private int pondSeed = random.nextInt(30);
+    static ArrayList<Point2D> pondLocations = new ArrayList<>();
     public Pond() {
         double pondX = randomCoordinateX();
         double pondY = randomCoordinateY();
+        if(pondLocations.size() == 0){
+            pondLocations.add(new Point2D(pondX, pondY));
+        }else {
+            for (int i = 0; i < pondLocations.size(); i++) {
+                while (isPondColliding(pondLocations.get(i), pondX, pondY)) {
+                    pondX = randomCoordinateX();
+                    pondY = randomCoordinateY();
+                }
+                if(pondLocations.size() > 2) {
+                    while(isPondColliding(pondLocations.get(i), pondX, pondY) ||
+                            isPondColliding(pondLocations.get(i - 1),
+                                    pondX, pondY)) {
+                        pondX = randomCoordinateX();
+                        pondY = randomCoordinateY();
+                    }
+                }
+            }
+            pondLocations.add(new Point2D(pondX, pondY));
+        }
         Circle pond = new Circle(pondRadius, Color.DEEPSKYBLUE);
         setTranslateX(pondX);
         setTranslateY(pondY);
@@ -444,12 +459,12 @@ class Pond extends GameObject{
         );
         pondText.setText(pondSeed + "%");
         getChildren().addAll(pond, pondText);
+
     }
     public void seedPond(){
         if(this.pondSeed < 100){
             this.seedTime++;
             if(this.seedTime % 60 == 0 ){
-                System.out.println("Pond is being seeded!");
                 this.pondSeed++;
             }
         }
@@ -468,6 +483,9 @@ class Pond extends GameObject{
     public double randomCoordinateY(){
         return randomNumberGenerator(Globals.ONE_THIRD_APP_HEIGHT - pondRadius,
                 Globals.APP_HEIGHT - pondRadius);
+    }
+    public boolean isPondColliding(Point2D pond1, double xCoord, double yCoord){
+        return pond1.distance(xCoord, yCoord) < (pondRadius * 2);
     }
     public void fillPond(){
         this.scale(1 + pondSeed * 0.01, 1 + pondSeed * 0.01);
@@ -518,8 +536,6 @@ class DistanceLines extends Pane{
         getChildren().addAll(distanceLine0, distanceLine1, distanceLine2);
     }
     public void visibility(){
-        System.out.println("Visibility boolean modified!");
-        System.out.println(isVisible);
         isVisible = !isVisible;
     }
     public void checkVisibility(){
@@ -558,6 +574,16 @@ class DistanceLines extends Pane{
     }
 }
 
+class Background extends Pane{
+    public Background(Game game){
+        Image backgroundImage = new Image("barrenland.jpg");
+        ImageView background = new ImageView(backgroundImage);
+        background.setFitHeight(Globals.APP_HEIGHT);
+        background.setFitWidth(Globals.APP_WIDTH);
+        game.getChildren().add(background);
+    }
+}
+
 class GameOver {
     GameApp gameApp;
     Alert gameOver = new Alert(
@@ -581,7 +607,9 @@ class GameOver {
     }
     public void popUpWin(){
         gameOver.setContentText(
-                "You win! Your Score: " + gameApp.rainmaker.choppah.getFuel() + ". Replay? ");
+                "You win! Your Score: " +
+                        gameApp.rainmaker.choppah.getFuel() +
+                        ". Replay? ");
         gameOver.setOnHidden(event -> {
             if(gameOver.getResult() == ButtonType.YES){
                 gameApp.rainmaker.init();
@@ -607,7 +635,7 @@ class GameOver {
 
 class Game extends Pane{
     Helicopter choppah = new Helicopter();
-    Helipad helipad = new Helipad();
+    Helipad helipad = new Helipad(this);
     Pane cloudySky = new Pane();
     ArrayList<Pond> ponds = new ArrayList<>();
     ArrayList<DistanceLines> distanceLines = new ArrayList<>();
@@ -640,11 +668,13 @@ class Game extends Pane{
         this.gameOver = gameOver;
     }
     public void init(){
+        Pond.pondLocations.clear();
         ponds.clear();
         distanceLines.clear();
         spawnPonds();
         this.getChildren().clear();
-        this.getChildren().addAll(new Helipad(),
+        this.getChildren().addAll(new Background(this),
+                new Helipad(this),
                 ponds.get(0),
                 ponds.get(1),
                 ponds.get(2),
@@ -772,8 +802,8 @@ class Game extends Pane{
 }
 
 public class GameApp extends Application {
-    GameOver pop = new GameOver(this);
-    Game rainmaker = new Game(pop);
+    GameOver gameOver = new GameOver(this);
+    Game rainmaker = new Game(gameOver);
     @Override
     public void start(Stage primaryStage){
         rainmaker.init();
@@ -805,12 +835,10 @@ public class GameApp extends Application {
             if(event.getCode() == KeyCode.SPACE){
                 rainmaker.seedCloud();
             }
-            if(event.getCode() == KeyCode.M){
-                //Reserved for testing purposes.
-            }
             if(event.getCode() == KeyCode.D){
                 rainmaker.toggleLines();
             }
+
         });
 
         rainmaker.game.start();
@@ -823,9 +851,3 @@ public class GameApp extends Application {
         Application.launch(args);
     }
 }
-/*
-* TODO LIST:
-*   -Pond Collision
-*   -Image Background and Helipad
-*   -State design via classes?
-*/
